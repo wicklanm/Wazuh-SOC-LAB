@@ -1,4 +1,3 @@
-<img width="1027" height="850" alt="NetworkAdaptor" src="https://github.com/user-attachments/assets/5422bbe6-fd21-407c-a594-6b6a702f4026" />
 # Wazuh-SOC-LAB
 I built an enterprise SOC lab demonstrating attack, detection, investigation, and incident response, portfolio-ready.
 
