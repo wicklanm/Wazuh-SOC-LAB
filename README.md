@@ -1,3 +1,4 @@
+<img width="1027" height="850" alt="NetworkAdaptor" src="https://github.com/user-attachments/assets/5422bbe6-fd21-407c-a594-6b6a702f4026" />
 # Wazuh-SOC-LAB
 I built an enterprise SOC lab demonstrating attack, detection, investigation, and incident response, portfolio-ready.
 
@@ -60,7 +61,11 @@ Subnet mask `255.255.255.0`, no gateway needed on the internal adapter (gateway 
    - Default gateway: leave blank (or point to nothing) on this adapter
    - Preferred DNS: **127.0.0.1** (it will be its own DNS server once AD DS is installed)
    - Leave the NAT adapter on DHCP for internet access.
-6. **Install AD DS role:** Server Manager → Add Roles and Features → Server Roles → check "Active Directory Domain Services" → accept the feature prompts → Install.
+   - <img width="1027" height="850" alt="NetworkAdaptor" src="https://github.com/user-attachments/assets/d08aaa00-7bc1-49eb-95fe-96a35889eb3a" />
+
+6. **Install AD DS role:** Server Manager → Add Roles and Features → Server Roles → check "Active Directory Domain Services" → accept the feature prompts → Install.<img width="783" height="560" alt="addrolesandfeatures" src="https://github.com/user-attachments/assets/292c1f78-b331-44cb-9bc6-95b24a26e5d3" /><img width="881" height="664" alt="addrolesandfeaturesADDomainServices" src="https://github.com/user-attachments/assets/d0fd0bc2-cf1b-42e3-ad67-e0de6a6339e5" />
+
+
 7. **Promote to Domain Controller:** After install finishes, click the flag/notification in Server Manager → "Promote this server to a domain controller" → **Add a new forest** → Root domain name: `SOCLAB.LOCAL` → set DSRM password (write it down somewhere safe — you'll rarely need it, but if AD breaks, you need it) → accept defaults for NetBIOS name (SOCLAB) → Install. The server will reboot automatically.
 8. **Verify:** After reboot, log in as `SOCLAB\Administrator`. Open **Active Directory Users and Computers** (dsa.msc) — you should see the SOCLAB.LOCAL domain tree. Open a command prompt and run `nslookup soclab.local` — it should resolve to itself.
 9. **Create OUs first, then users** (keeps things organized for GPOs later): In ADUC, right-click the domain → New → Organizational Unit. Suggested OUs: `Employees`, `IT`, `ServiceAccounts`.
