@@ -106,7 +106,8 @@ curl -sO https://packages.wazuh.com/4.x/wazuh-install.sh && sudo bash ./wazuh-in
 <img width="1005" height="303" alt="installing Wazuh on Ubunto Server" src="https://github.com/user-attachments/assets/fa94218e-bebf-4b1e-b0f3-881bed621dd4" />
 
 5. The installer prints the **admin password for the dashboard at the end of the run** — copy it immediately, it's not shown again (you can regenerate it later with the wazuh-passwords-tool if you lose it).
-6. Verify the dashboard: from your host browser, go to `https://192.168.100.40` (you'll need host-to-VM connectivity — if you only have Internal Network + NAT, temporarily add a Host-Only adapter to WAZUH so your host browser can reach it, or use VirtualBox port forwarding on the NAT adapter). Accept the self-signed cert warning. Log in as `admin` with the password from step 5.
+6. Verify the dashboard: from your host browser, go to `https://192.168.100.40` (you'll need host-to-VM connectivity — if you only have Internal Network + NAT, temporarily add a Host-Only adapter to WAZUH so your host browser can reach it, or use VirtualBox port forwarding on the NAT adapter).<img width="773" height="509" alt="hostonlyadapter" src="https://github.com/user-attachments/assets/87eb0cfe-b6c6-4c51-ae45-784ab9edfea6" />
+ Accept the self-signed cert warning. Log in as `admin` with the password from step 5.
 7. **Common failure point:** If the dashboard won't load, check `sudo systemctl status wazuh-dashboard wazuh-manager wazuh-indexer` — indexer failing to start is usually a memory or `vm.max_map_count` issue (the installer should set this, but verify with `sysctl vm.max_map_count`, should be ≥262144).
 
 ---
