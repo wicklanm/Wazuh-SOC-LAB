@@ -122,7 +122,10 @@ We are in: <img width="1908" height="909" alt="WazuhDashboard" src="https://gith
 3. Install from an elevated PowerShell/cmd prompt:
 ```powershell
 .\Sysmon64.exe -accepteula -i sysmonconfig-export.xml
-``` <img width="792" height="480" alt="3_installdriverservice_verifyservice" src="https://github.com/user-attachments/assets/57c4315e-ea2a-4fc9-961c-4ac141917059" />
+```
+
+<img width="792" height="480" alt="3_installdriverservice_verifyservice" src="https://github.com/user-attachments/assets/57c4315e-ea2a-4fc9-961c-4ac141917059" />
+
 4. **Verify:** Open Event Viewer → Applications and Services Logs → Microsoft → Windows → **Sysmon** → Operational. You should see Event ID 1 (process creation) entries populating as you use the machine. If the log is empty, check `Get-Service sysmon64` — it should show Running. <img width="1020" height="718" alt="4_EventViewer" src="https://github.com/user-attachments/assets/dc781c85-5240-4b80-bc83-e6520739359b" />
 
 5. Repeat identically on WIN11.
