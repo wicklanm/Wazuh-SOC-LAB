@@ -1,3 +1,8 @@
+<img width="715" height="674" alt="1_Sysmondownload" src="https://github.com/user-attachments/assets/1f3a35da-4784-41e9-9772-51ee95fc6a53" />
+<img width="715" height="674" alt="1_Sysmondownload" src="https://github.com/user-attachments/assets/35aba938-78a9-4ae5-a690-36017b8a931f" />
+<img width="792" height="480" alt="3_installdriverservice_verifyservice" src="https://github.com/user-attachments/assets/94763a63-0722-4bef-9a48-f386c975695e" />
+<img width="979" height="632" alt="2_sysmon exportxmldownloadswiftondecurity" src="https://github.com/user-attachments/assets/81eccfff-9f23-4b1a-a518-7eacb4449eef" />
+<img width="715" height="674" alt="1_Sysmondownload" src="https://github.com/user-attachments/assets/63259f85-9379-4152-82c5-3ba7c7e96cbd" />
 <img width="962" height="755" alt="Screenshot 2026-07-19 160407" src="https://github.com/user-attachments/assets/151f07dc-9295-4571-8773-0e7977f4e642" />
 <img width="1010" height="781" alt="Screenshot 2026-07-19 155402" src="https://github.com/user-attachments/assets/a9fbc320-f431-493e-91d6-21c89af8d816" />
 # Wazuh-SOC-LAB
@@ -118,13 +123,15 @@ We are in: <img width="1908" height="909" alt="WazuhDashboard" src="https://gith
 
 ## Phase 5 – Sysmon (on DC01 and WIN11)
 
-1. Download Sysmon from Microsoft Sysinternals (via NAT adapter internet access).
-2. Download the SwiftOnSecurity `sysmonconfig-export.xml` from its GitHub repo — this is a widely-used, well-tuned baseline config that filters noise while keeping security-relevant events.
+1. Download Sysmon from Microsoft Sysinternals (via NAT adapter internet access). <img width="715" height="674" alt="1_Sysmondownload" src="https://github.com/user-attachments/assets/d182e30d-3aa5-410a-95a8-14dbef2c7116" />
+
+2. Download the SwiftOnSecurity `sysmonconfig-export.xml` from its GitHub repo — this is a widely-used, well-tuned baseline config that filters noise while keeping security-relevant events. <img width="979" height="632" alt="2_sysmon exportxmldownloadswiftondecurity" src="https://github.com/user-attachments/assets/cd74683b-3221-4f08-99c6-8cc5f44e25e0" />
 3. Install from an elevated PowerShell/cmd prompt:
 ```powershell
 .\Sysmon64.exe -accepteula -i sysmonconfig-export.xml
-```
-4. **Verify:** Open Event Viewer → Applications and Services Logs → Microsoft → Windows → **Sysmon** → Operational. You should see Event ID 1 (process creation) entries populating as you use the machine. If the log is empty, check `Get-Service sysmon64` — it should show Running.
+``` <img width="792" height="480" alt="3_installdriverservice_verifyservice" src="https://github.com/user-attachments/assets/57c4315e-ea2a-4fc9-961c-4ac141917059" />
+4. **Verify:** Open Event Viewer → Applications and Services Logs → Microsoft → Windows → **Sysmon** → Operational. You should see Event ID 1 (process creation) entries populating as you use the machine. If the log is empty, check `Get-Service sysmon64` — it should show Running. <img width="1020" height="718" alt="4_EventViewer" src="https://github.com/user-attachments/assets/dc781c85-5240-4b80-bc83-e6520739359b" />
+
 5. Repeat identically on WIN11.
 
 ---
