@@ -1,10 +1,3 @@
-<img width="715" height="674" alt="1_Sysmondownload" src="https://github.com/user-attachments/assets/1f3a35da-4784-41e9-9772-51ee95fc6a53" />
-<img width="715" height="674" alt="1_Sysmondownload" src="https://github.com/user-attachments/assets/35aba938-78a9-4ae5-a690-36017b8a931f" />
-<img width="792" height="480" alt="3_installdriverservice_verifyservice" src="https://github.com/user-attachments/assets/94763a63-0722-4bef-9a48-f386c975695e" />
-<img width="979" height="632" alt="2_sysmon exportxmldownloadswiftondecurity" src="https://github.com/user-attachments/assets/81eccfff-9f23-4b1a-a518-7eacb4449eef" />
-<img width="715" height="674" alt="1_Sysmondownload" src="https://github.com/user-attachments/assets/63259f85-9379-4152-82c5-3ba7c7e96cbd" />
-<img width="962" height="755" alt="Screenshot 2026-07-19 160407" src="https://github.com/user-attachments/assets/151f07dc-9295-4571-8773-0e7977f4e642" />
-<img width="1010" height="781" alt="Screenshot 2026-07-19 155402" src="https://github.com/user-attachments/assets/a9fbc320-f431-493e-91d6-21c89af8d816" />
 # Wazuh-SOC-LAB
 I built an enterprise SOC lab demonstrating attack, detection, investigation, and incident response, portfolio-ready.
 
