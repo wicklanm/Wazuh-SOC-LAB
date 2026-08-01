@@ -86,7 +86,8 @@ Repeat for Jane.Doe, Helpdesk, ITAdmin, Accounting (adjust OU as appropriate —
 3. Join the domain: Settings → Accounts → Access work or school → or classic route: This PC → Properties → Advanced system settings → Computer Name → Change → Domain: `SOCLAB.LOCAL` → enter Administrator credentials when prompted → reboot.<img width="962" height="755" alt="Screenshot 2026-07-19 160407" src="https://github.com/user-attachments/assets/5b195b0e-b667-42fd-a6ba-46204bd0a960" /> <img width="600" height="600" alt="changetosoclablocal" src="https://github.com/user-attachments/assets/5ed2a80f-1049-4520-8f3c-f4114d88895d" />
 4. **Verify domain join:** After reboot, the login screen should show "Other user" / `SOCLAB\username`. Log in as `John.Smith`. On DC01, in ADUC, confirm the WIN11 computer object appears under Computers. Also verify they can ping to eachother. Also might be wise to flush the dns (/ flushdns in CMD).
 5. Install Chrome, Firefox, 7-Zip (download via the NAT adapter's internet access). Can use this for testing laterall movement later in the lab.
-6. **Common failure point:** "Domain not found" during join almost always = DNS misconfigured on WIN11, or the internal-network adapter name/label doesn't actually match `SOC-LAB` on both VMs. Double check both.
+6. **Common failure point:** "Domain not found" during join almost always = DNS misconfigured on WIN11, or the internal-network adapter name/label doesn't actually match `SOC-LAB` on both VMs. Double check both. You may also need to enable file and printer sharing via ip4, both incoming on WIN11 machine, and outgoing for WIN2025(DC01) machine.
+<img width="816" height="539" alt="Screenshot 2026-08-01 131940" src="https://github.com/user-attachments/assets/e1f97922-487f-435e-9969-360d2578ba99" />
 
 ---
 
