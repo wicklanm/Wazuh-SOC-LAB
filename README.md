@@ -93,7 +93,7 @@ Repeat for Jane.Doe, Helpdesk, ITAdmin, Accounting (adjust OU as appropriate —
 
 ## Phase 4 – Wazuh SIEM (WAZUH)
 
-1. Install Ubuntu Server 24.04 on the WAZUH VM. During install, enable OpenSSH server (makes remote administration far easier than working in the VirtualBox console). Set a static IP via netplan or the installer's network step: 192.168.100.40.<img width="317" height="241" alt="settingIPaddressforinstallernetplan" src="https://github.com/user-attachments/assets/a49cbf11-0590-43f1-93e5-a52b8f0715aa" />
+1. Install Ubuntu Server 24.04 on the WAZUH VM. During install, enable OpenSSH server (makes remote administration far easier than working in the VirtualBox console). Set a static IP via netplan or the installer's network step: 192.168.100.40.
 
 <img width="917" height="845" alt="Screenshot 2026-08-01 151144" src="https://github.com/user-attachments/assets/269cdcc7-1718-4cf3-b03a-6199133c0fa3" />
 
