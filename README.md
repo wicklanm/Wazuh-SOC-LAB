@@ -180,12 +180,16 @@ Restart the WazuhSvc service after editing.
 
 In the Wazuh dashboard, click the menu icon (☰) top-left → Agents management → Summary → click Deploy new agent (on some versions this path is labeled Management → Endpoints → Deploy new agent — same feature, slightly different label depending on your Wazuh version).
 
+<img width="1134" height="577" alt="Screenshot 2026-08-02 145652" src="https://github.com/user-attachments/assets/19018e16-59d1-43e5-9c76-32883c7af31d" />
+
 2. Fill out the wizard
 
 Operating system: Windows
 Wazuh server address: 192.168.100.40 (your WAZUH box)
 Agent name: something identifiable, e.g. DC01 or WIN11 — note this cannot be changed after enrollment, so don't rush this field
 Leave agent group as default unless you've already created custom groups
+
+<img width="1146" height="823" alt="Screenshot 2026-08-02 150122" src="https://github.com/user-attachments/assets/5e083de4-7570-4eeb-bb78-987ff14e1b65" />
 
 The wizard generates a PowerShell command with everything pre-filled. It'll look something like this (yours will have the current version number baked in — use whatever the wizard actually gives you, don't copy this verbatim):
 
@@ -197,6 +201,8 @@ msiexec.exe /i $env:tmp\wazuh-agent.msi /q WAZUH_MANAGER="192.168.100.40" WAZUH_
 
 Open PowerShell as Administrator on DC01 (or WIN11), paste the exact command the wizard gave you, and run it. The /q flag means silent install — no popups, no progress bar, it just returns to the prompt when done (this can look like nothing happened; that's normal, not a hang).
 
+<img width="1014" height="276" alt="Screenshot 2026-08-02 151501" src="https://github.com/user-attachments/assets/da7c5196-2032-430c-a7c9-0d93fcef2c1e" />
+
 4. Start the agent service
 
 The installer usually starts it automatically, but confirm/force it:
@@ -206,6 +212,8 @@ NET START WazuhSvc
 
 If it says "already started," you're good.
 
+<img width="411" height="109" alt="Screenshot 2026-08-02 151658" src="https://github.com/user-attachments/assets/f168c94d-e83b-41e9-a819-7f6d41fe8f1e" />
+
 5. Verify from the Windows side before checking the dashboard
 
 powershell
@@ -214,9 +222,13 @@ notepad "C:\Program Files (x86)\ossec-agent\ossec.log"
 
 The log should show lines indicating a successful connection to the manager (look for Connected to the server or similar — anything repeatedly saying "Trying to connect" without ever succeeding means it's not reaching WAZUH, see troubleshooting below).
 
+<img width="779" height="322" alt="Screenshot 2026-08-02 151859" src="https://github.com/user-attachments/assets/edc81eeb-25ea-4ce5-adfb-f437eab7e8f3" />
+
 6. Verify from the dashboard
 
 Back in the Wazuh dashboard, go to Agents management → Summary — your new agent should appear with status Active (it can take 30-60 seconds and a page refresh to show up).
+
+<img width="466" height="316" alt="Screenshot 2026-08-02 152055" src="https://github.com/user-attachments/assets/5b397ffc-740e-46df-a4c7-b15d87ed6d20" />
 
 7. Critical step — forward the Sysmon log (this is NOT automatic)
 
@@ -224,6 +236,8 @@ By default, the Wazuh agent ships Windows Application/System/Security logs, but 
 
 powershell
 notepad "C:\Program Files (x86)\ossec-agent\ossec.conf"
+
+<img width="746" height="477" alt="Screenshot 2026-08-02 152311" src="https://github.com/user-attachments/assets/b292d7ec-df9c-4e73-886a-06a8d2e5b341" />
 
 Find the <ossec_config> section that already has <localfile> blocks for Application/Security/System, and add a new one right alongside them:
 
@@ -233,6 +247,8 @@ xml
   <log_format>eventchannel</log_format>
 </localfile>
 
+<img width="678" height="281" alt="Screenshot 2026-08-02 152632" src="https://github.com/user-attachments/assets/08a11d78-ef02-450a-b49e-f66b831613e9" />
+
 Save the file, then restart the agent service so it picks up the change:
 
 powershell
@@ -240,11 +256,15 @@ Restart-Service -Name WazuhSvc
 
 8. Confirm Sysmon events are actually arriving
 
+<img width="568" height="508" alt="Screenshot 2026-08-02 152806" src="https://github.com/user-attachments/assets/32aa255b-d665-4d3b-a4d7-b16284cfab0a" />
+
 In the dashboard, go to Threat hunting (or Security events, depending on version) → filter/search for:
 
 data.win.system.channel: "Microsoft-Windows-Sysmon/Operational"
 
 Then trigger something on the Windows box (open Notepad, run a command) and refresh — you should see a new event within roughly 30-60 seconds. If nothing shows up after a couple minutes, that's your sign the <localfile> block wasn't added correctly or the service didn't actually restart — reopen ossec.conf and confirm your edit saved (Notepad sometimes silently fails to save if it was opened without admin rights, even though you launched PowerShell as admin — open Notepad itself elevated, or edit via notepad.exe launched from the admin PowerShell session, which inherits the elevation).
+
+<img width="1149" height="908" alt="Screenshot 2026-08-02 154009" src="https://github.com/user-attachments/assets/31815ba7-3f73-42cc-ac9f-8dc7f9ed641a" />
 
 Common failure points:
 
