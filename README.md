@@ -266,6 +266,8 @@ Then trigger something on the Windows box (open Notepad, run a command) and refr
 
 <img width="1149" height="908" alt="Screenshot 2026-08-02 154009" src="https://github.com/user-attachments/assets/31815ba7-3f73-42cc-ac9f-8dc7f9ed641a" />
 
+### After doing this on whichever Windows machine you chose, please repeat the steps on the other machine now (DC01 or WIN11)
+
 Common failure points:
 
 Agent shows "Never connected" / stuck "Pending": almost always a firewall issue. The agent needs outbound TCP 1515 (initial registration) and TCP 1514 (ongoing communication) to reach 192.168.100.40. Check Windows Firewall isn't blocking outbound, and check sudo ufw status on the WAZUH box isn't blocking inbound on those ports.
