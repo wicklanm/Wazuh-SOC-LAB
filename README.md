@@ -109,11 +109,32 @@ curl -sO https://packages.wazuh.com/4.x/wazuh-install.sh && sudo bash ./wazuh-in
 5. The installer prints the **admin password for the dashboard at the end of the run** — copy it immediately, it's not shown again (you can regenerate it later with the wazuh-passwords-tool if you lose it).
 6. You will need to make sure a host-only network is added prior to this, and then you will need to edit the same netplan as before to add this new adapter (use ip a command, then view new adaptor showing, should most likely read as enp0s9, add that to the netplan using sudo) <img width="256" height="192" alt="addenp0s9_for_hostonlyadaptor" src="https://github.com/user-attachments/assets/358e65e6-ebcf-41d5-bcf6-5c38ea2c57c2" />
 7. Verify the dashboard: from your host browser, go to `https://192.168.16.2`, or whataver host-only IP address the host-only adaptor gives you. (you'll need host-to-VM connectivity — if you only have Internal Network + NAT, temporarily add a Host-Only adapter to WAZUH so your host browser can reach it, or use VirtualBox port forwarding on the NAT adapter).<img width="773" height="509" alt="hostonlyadapter" src="https://github.com/user-attachments/assets/87eb0cfe-b6c6-4c51-ae45-784ab9edfea6" />
-8. You will need to make sure a host-only network is added prior to this, and then you will need to edit the same netplan as before to add this new adapter (use ip a sommand, then view new adaptor showing, should most likely read as enp0s9, add that to the netplan using sudo) <img width="256" height="192" alt="addenp0s9_for_hostonlyadaptor" src="https://github.com/user-attachments/assets/358e65e6-ebcf-41d5-bcf6-5c38ea2c57c2" />
-9. Accept the self-signed cert warning. Log in as `admin` with the password from step 5. <img width="1162" height="1036" alt="Wazuh_Login" src="https://github.com/user-attachments/assets/b3bfebbc-b9a3-405d-9640-6380ff0ace1e" />
+8. You will need to make sure a host-only network is added prior to this, and then you will need to edit the same netplan as before to add this new adapter (use ip a sommand, then view new adaptor showing, should most likely read as enp0s9, add that to the netplan using sudo)
+- use this command to see what netplan you are currently using (mine is '50-cloud-init.yaml'):
+    - ls /etc/netplan/
+- Then is this command to edit our netplan (network/adapter configuration)
+      - sudo nano /etc/netplan/50-cloud-init.yaml
+- The configuration I used is:
+network:
+  version: 2
+  ethernets:
+    enp0s3:
+      dhcp4: no
+      addresses:
+        - 192.168.100.40/24
+    enp0s8:
+      dhcp4: yes
+    enp0s9:
+      dhcp4: yes
+      addresses:
+        - 192.168.56.10/24
+
+<img width="282" height="268" alt="Screenshot 2026-08-02 141432" src="https://github.com/user-attachments/assets/54b25155-8440-4640-95a9-e86dd0a0871b" />
+
+11. Accept the self-signed cert warning. Log in as `admin` with the password from step 5. <img width="1162" height="1036" alt="Wazuh_Login" src="https://github.com/user-attachments/assets/b3bfebbc-b9a3-405d-9640-6380ff0ace1e" />
 We are in: <img width="1908" height="909" alt="WazuhDashboard" src="https://github.com/user-attachments/assets/5ccfd3c5-1f99-4ad9-958e-2a8cdf5ccd55" />
 
-10. **Common failure point:** If the dashboard won't load, check `sudo systemctl status wazuh-dashboard wazuh-manager wazuh-indexer` — indexer failing to start is usually a memory or `vm.max_map_count` issue (the installer should set this, but verify with `sysctl vm.max_map_count`, should be ≥262144).
+12. **Common failure point:** If the dashboard won't load, check `sudo systemctl status wazuh-dashboard wazuh-manager wazuh-indexer` — indexer failing to start is usually a memory or `vm.max_map_count` issue (the installer should set this, but verify with `sysctl vm.max_map_count`, should be ≥262144).
 
 ---
 
