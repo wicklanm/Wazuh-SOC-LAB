@@ -174,6 +174,83 @@ Restart the WazuhSvc service after editing.
 5. **Verify end-to-end:** In the Wazuh dashboard, go to Agents — DC01 and WIN11 should show status "Active." Then go to the Discover/Events view and filter for `rule.groups: sysmon` or search for `location: Microsoft-Windows-Sysmon/Operational`. Trigger a test event (e.g., run `notepad.exe`) and confirm it appears in the dashboard within ~30-60 seconds.
 6. **Common failure point:** Agent shows "Never connected" or "Disconnected" — usually a firewall issue. Ensure Windows Firewall on DC01/WIN11 allows outbound to WAZUH on TCP/UDP 1514 and 1515, and that the WAZUH Ubuntu firewall (ufw, if enabled) allows those ports inbound.
 
+### Better Instructions
+
+1. Open the "Deploy new agent" wizard
+
+In the Wazuh dashboard, click the menu icon (☰) top-left → Agents management → Summary → click Deploy new agent (on some versions this path is labeled Management → Endpoints → Deploy new agent — same feature, slightly different label depending on your Wazuh version).
+
+2. Fill out the wizard
+
+Operating system: Windows
+Wazuh server address: 192.168.100.40 (your WAZUH box)
+Agent name: something identifiable, e.g. DC01 or WIN11 — note this cannot be changed after enrollment, so don't rush this field
+Leave agent group as default unless you've already created custom groups
+
+The wizard generates a PowerShell command with everything pre-filled. It'll look something like this (yours will have the current version number baked in — use whatever the wizard actually gives you, don't copy this verbatim):
+
+powershell
+Invoke-WebRequest -Uri https://packages.wazuh.com/4.x/windows/wazuh-agent-4.13.0-1.msi -OutFile $env:tmp\wazuh-agent.msi
+msiexec.exe /i $env:tmp\wazuh-agent.msi /q WAZUH_MANAGER="192.168.100.40" WAZUH_AGENT_NAME="DC01"
+
+3. Run the generated command on the target machine
+
+Open PowerShell as Administrator on DC01 (or WIN11), paste the exact command the wizard gave you, and run it. The /q flag means silent install — no popups, no progress bar, it just returns to the prompt when done (this can look like nothing happened; that's normal, not a hang).
+
+4. Start the agent service
+
+The installer usually starts it automatically, but confirm/force it:
+
+powershell
+NET START WazuhSvc
+
+If it says "already started," you're good.
+
+5. Verify from the Windows side before checking the dashboard
+
+powershell
+Get-Service WazuhSvc
+notepad "C:\Program Files (x86)\ossec-agent\ossec.log"
+
+The log should show lines indicating a successful connection to the manager (look for Connected to the server or similar — anything repeatedly saying "Trying to connect" without ever succeeding means it's not reaching WAZUH, see troubleshooting below).
+
+6. Verify from the dashboard
+
+Back in the Wazuh dashboard, go to Agents management → Summary — your new agent should appear with status Active (it can take 30-60 seconds and a page refresh to show up).
+
+7. Critical step — forward the Sysmon log (this is NOT automatic)
+
+By default, the Wazuh agent ships Windows Application/System/Security logs, but not the Sysmon operational log — you have to explicitly add it. On the Windows machine:
+
+powershell
+notepad "C:\Program Files (x86)\ossec-agent\ossec.conf"
+
+Find the <ossec_config> section that already has <localfile> blocks for Application/Security/System, and add a new one right alongside them:
+
+xml
+<localfile>
+  <location>Microsoft-Windows-Sysmon/Operational</location>
+  <log_format>eventchannel</log_format>
+</localfile>
+
+Save the file, then restart the agent service so it picks up the change:
+
+powershell
+Restart-Service -Name WazuhSvc
+
+8. Confirm Sysmon events are actually arriving
+
+In the dashboard, go to Threat hunting (or Security events, depending on version) → filter/search for:
+
+data.win.system.channel: "Microsoft-Windows-Sysmon/Operational"
+
+Then trigger something on the Windows box (open Notepad, run a command) and refresh — you should see a new event within roughly 30-60 seconds. If nothing shows up after a couple minutes, that's your sign the <localfile> block wasn't added correctly or the service didn't actually restart — reopen ossec.conf and confirm your edit saved (Notepad sometimes silently fails to save if it was opened without admin rights, even though you launched PowerShell as admin — open Notepad itself elevated, or edit via notepad.exe launched from the admin PowerShell session, which inherits the elevation).
+
+Common failure points:
+
+Agent shows "Never connected" / stuck "Pending": almost always a firewall issue. The agent needs outbound TCP 1515 (initial registration) and TCP 1514 (ongoing communication) to reach 192.168.100.40. Check Windows Firewall isn't blocking outbound, and check sudo ufw status on the WAZUH box isn't blocking inbound on those ports.
+Agent connects then drops repeatedly: usually a hostname/IP mismatch — if you reinstalled WAZUH or changed its IP after agents were enrolled, old agent keys may reference a stale manager IP. Easiest fix in a lab is to remove the agent from the dashboard and re-enroll from scratch.
+ossec.conf edit "doesn't work": check for a typo in the XML (unclosed tag) — a malformed ossec.conf can cause the service to silently fail to fully start. Get-Service WazuhSvc will still often show "Running" even when config parsing partially failed, so the log file (step 5) is a more reliable check than service status alone.
 ---
 
 ## Phase 7 – Kali Setup
