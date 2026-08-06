@@ -332,7 +332,11 @@ sudo nmtui
 
 Edit the internal-network interface (likely `eth0`) → IPv4 CONFIGURATION → **Manual** → Address: `192.168.100.30/24` → leave Gateway/DNS blank on this interface → OK → Activate the connection.
 
-***Alternatatively*** edit connections from the ethernet port icon on the upper right of Linux desktop. Keep wired connection set as Automatic and using DHCP. add other network and keep as manual, and use the ip address above (192.168.100.30/24).
+<img width="600" height="694" alt="Screenshot 2026-08-05 200213" src="https://github.com/user-attachments/assets/b84ff4e6-2d89-471f-8aa8-670d7c6e2f33" />
+
+***Alternatively*** edit connections from the ethernet port icon on the upper right of Linux desktop. Keep wired connection set as Automatic and using DHCP. add other network and keep as manual, and use the ip address above (192.168.100.30/24).
+
+<img width="685" height="536" alt="Screenshot 2026-08-05 201449" src="https://github.com/user-attachments/assets/94783146-210a-415d-abcd-c0e6e906003d" />
 
 Leave the second interface (NAT) on Automatic/DHCP.
 
@@ -368,6 +372,9 @@ ping -c 3 8.8.8.8          # internet
 
 ---
 
+<img width="638" height="624" alt="Screenshot 2026-08-05 202435" src="https://github.com/user-attachments/assets/b3f789aa-c655-441c-8021-f802ab8f0697" />
+
+
 ### Part C: Update and Install Tools
 
 #### 8. Update the system first
@@ -381,6 +388,8 @@ sudo apt update && sudo apt full-upgrade -y
 ```bash
 which nmap hydra responder crackmapexec bloodhound 2>/dev/null
 ```
+
+<img width="1157" height="732" alt="Screenshot 2026-08-05 202634" src="https://github.com/user-attachments/assets/3c1656d1-e086-4e30-a871-3313c5164b05" />
 
 Anything that returns a path is already present — skip reinstalling it.
 
@@ -399,11 +408,15 @@ nxc --version
 sudo apt install -y crackmapexec
 ```
 
+<img width="1161" height="792" alt="Screenshot 2026-08-05 205317" src="https://github.com/user-attachments/assets/e8ac9edc-4f09-499f-803e-9fc38a1af2a4" />
+
 #### 11. Install remaining tools
 
 ```bash
 sudo apt install -y responder bloodhound neo4j
 ```
+
+<img width="613" height="258" alt="Screenshot 2026-08-05 205549" src="https://github.com/user-attachments/assets/48e1b7cc-759b-44e5-96ae-8927ca476020" />
 
 #### 12. Impacket (via pipx)
 
@@ -439,6 +452,8 @@ sudo apt install -y ruby-full ruby-dev
 ```bash
 sudo neo4j start
 ```
+
+<img width="833" height="648" alt="Screenshot 2026-08-05 205645" src="https://github.com/user-attachments/assets/26cc5ba6-60cd-4f9e-af8b-26ce7516c2c3" />
 
 Wait 15-20 seconds for it to fully start, then open `http://localhost:7474` in a browser inside Kali (e.g. `firefox-esr &`) — log in with the default `neo4j`/`neo4j` credentials and set a new password when prompted. Then launch:
 
