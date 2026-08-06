@@ -160,22 +160,6 @@ We are in: <img width="1908" height="909" alt="WazuhDashboard" src="https://gith
 
 ## Phase 6 – Wazuh Agents (on DC01 and WIN11)
 
-1. On the Wazuh dashboard: Agents → Add agent → select Windows → it generates a install command with the manager IP pre-filled (192.168.100.40) and an agent name.
-2. Run the generated PowerShell command on DC01 and WIN11 (downloads and installs the agent MSI, registers with the manager automatically).
-3. Start the agent service: `NET START WazuhSvc` (the installer usually does this, but confirm with `Get-Service WazuhSvc`).
-4. **Critical step people miss:** by default the Wazuh agent does *not* automatically forward the Sysmon operational log — you must add it explicitly to the agent's `ossec.conf` (Program Files\ossec-agent\ossec.conf) inside a `<localfile>` block:
-```xml
-<localfile>
-  <location>Microsoft-Windows-Sysmon/Operational</location>
-  <log_format>eventchannel</log_format>
-</localfile>
-```
-Restart the WazuhSvc service after editing.
-5. **Verify end-to-end:** In the Wazuh dashboard, go to Agents — DC01 and WIN11 should show status "Active." Then go to the Discover/Events view and filter for `rule.groups: sysmon` or search for `location: Microsoft-Windows-Sysmon/Operational`. Trigger a test event (e.g., run `notepad.exe`) and confirm it appears in the dashboard within ~30-60 seconds.
-6. **Common failure point:** Agent shows "Never connected" or "Disconnected" — usually a firewall issue. Ensure Windows Firewall on DC01/WIN11 allows outbound to WAZUH on TCP/UDP 1514 and 1515, and that the WAZUH Ubuntu firewall (ufw, if enabled) allows those ports inbound.
-
-### Better Instructions
-
 1. Open the "Deploy new agent" wizard
 
 In the Wazuh dashboard, click the menu icon (☰) top-left → Agents management → Summary → click Deploy new agent (on some versions this path is labeled Management → Endpoints → Deploy new agent — same feature, slightly different label depending on your Wazuh version).
