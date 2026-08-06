@@ -289,6 +289,9 @@ Choose **Graphical install** at the boot menu (not "Live" or text-mode "Install"
 - **Software selection:** choose **Xfce** for the desktop environment, and make sure the **default tools collection** stays checked (not just a bare desktop) — this determines whether nmap/hydra/Responder etc. are present immediately after install
 - **GRUB bootloader:** install to `/dev/sda`
 
+<img width="792" height="681" alt="Screenshot 2026-08-05 185629" src="https://github.com/user-attachments/assets/15ee5504-1491-4b05-9851-3257333d8560" />
+
+
 Let it finish, remove the ISO from the virtual optical drive (VM Settings → Storage), and reboot.
 
 #### 4. Log in and confirm access
@@ -299,6 +302,9 @@ sudo -i
 ```
 
 ---
+
+<img width="947" height="634" alt="Screenshot 2026-08-05 190839" src="https://github.com/user-attachments/assets/a5b90596-8711-4fcf-bad1-8d22424867db" />
+<img width="293" height="92" alt="Screenshot 2026-08-05 190828" src="https://github.com/user-attachments/assets/e0d334dc-3e23-4abf-9ef8-e7683fb1b4e1" />
 
 ### Part B: Networking
 
@@ -325,6 +331,8 @@ sudo nmtui
 ```
 
 Edit the internal-network interface (likely `eth0`) → IPv4 CONFIGURATION → **Manual** → Address: `192.168.100.30/24` → leave Gateway/DNS blank on this interface → OK → Activate the connection.
+
+***Alternatatively*** edit connections from the ethernet port icon on the upper right of Linux desktop. Keep wired connection set as Automatic and using DHCP. add other network and keep as manual, and use the ip address above (192.168.100.30/24).
 
 Leave the second interface (NAT) on Automatic/DHCP.
 
