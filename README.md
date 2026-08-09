@@ -549,6 +549,8 @@ xfreerdp /v:192.168.100.20 -u John.Smith -p 'ChangeMe123!'
 ```
 You are now remoted in.
 
+<img width="1284" height="706" alt="Screenshot 2026-08-09 124029" src="https://github.com/user-attachments/assets/0a6df8d4-4dd5-466a-a0c5-99fa48b2700c" />
+
 **Verify in Wazuh:** Windows Security Event ID 4624 (successful logon) — note the Logon Type (3 = network, typical for WinRM) as a field you'll reference in Phase 9/11.
 
 ---
@@ -582,6 +584,8 @@ $cmd3 = 'Get-Process | Select-Object Name, Id'
 $enc3 = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($cmd3))
 powershell.exe -WindowStyle Hidden -EncodedCommand $enc3
 ```
+
+<img width="391" height="713" alt="Screenshot 2026-08-09 130038" src="https://github.com/user-attachments/assets/89f8dfe7-ba92-4929-96bd-cf370cdc4a7f" />
 
 **Verify in Wazuh:** Sysmon Event ID 1 (process creation) — filter for `CommandLine` containing `-enc` or `-EncodedCommand`. The `-WindowStyle Hidden` variant is particularly worth noting as a common real-world evasion flag.
 
@@ -684,6 +688,11 @@ qwinsta
 query user
 ```
 
+<img width="761" height="587" alt="Screenshot 2026-08-09 131647" src="https://github.com/user-attachments/assets/1beaa75d-c97e-4227-8ff1-6f489c23c179" />
+<img width="730" height="219" alt="Screenshot 2026-08-09 131732" src="https://github.com/user-attachments/assets/711c8bc4-1b62-4b5d-b1d4-dfdcf9be8d8b" />
+<img width="736" height="501" alt="Screenshot 2026-08-09 132400" src="https://github.com/user-attachments/assets/6778316e-add9-4980-baae-6c053c09ab97" />
+<img width="595" height="557" alt="Screenshot 2026-08-09 132905" src="https://github.com/user-attachments/assets/d7b4a60e-bc62-4876-9126-d79d59786fc9" />
+
 **Verify in Wazuh:** Sysmon Event ID 1 for `net.exe` calls, Windows Security Event ID 4661 (object handle requested) for directory service queries.
 
 **MITRE:** T1087.002 (Domain Account Discovery), T1018 (Remote System Discovery)
@@ -720,6 +729,9 @@ Invoke-Command -ComputerName DC01 -Credential $cred -ScriptBlock {
 }
 ```
 
+<img width="761" height="587" alt="Screenshot 2026-08-09 131647" src="https://github.com/user-attachments/assets/1e0da96a-13b9-4199-a3ed-771e05db8127" />
+
+
 **Method C — Map a network share (SMB lateral movement):**
 ```powershell
 net use \\192.168.100.10\C$ /user:SOCLAB\ITAdmin YourPassword
@@ -737,11 +749,15 @@ dir \\192.168.100.10\C$
 
 ### Scenario 9 — Atomic Red Team Simulations
 
+*Each test simulates a specific MITRE technique in a controlled, documented way — they're not actual malware, they're proof-of-concept executions that mimic what malware would do*
+
 Run from PowerShell (Admin) on WIN11 inside the RDP session:
 
 ```powershell
 Import-Module "C:\AtomicRedTeam\invoke-atomicredteam\Invoke-AtomicRedTeam.psd1" -Force
 ```
+
+<img width="1285" height="693" alt="Screenshot 2026-08-09 132914" src="https://github.com/user-attachments/assets/a051f5f3-900e-4341-b5a0-5b20e27c0fb0" />
 
 **Run individual technique tests:**
 ```powershell
@@ -758,6 +774,8 @@ Invoke-AtomicTest T1059.001
 Invoke-AtomicTest T1087.002
 ```
 
+<img width="1289" height="719" alt="Screenshot 2026-08-09 133153" src="https://github.com/user-attachments/assets/d4df5e50-538d-46c2-9226-c394caba808b" />
+
 **Check prerequisites before running** (some tests need specific tools/conditions):
 ```powershell
 Invoke-AtomicTest T1003.001 -CheckPrereqs
@@ -769,7 +787,13 @@ Invoke-AtomicTest T1003.001 -Cleanup
 Invoke-AtomicTest T1053.005 -Cleanup
 ```
 
+<img width="881" height="679" alt="Screenshot 2026-08-09 134247" src="https://github.com/user-attachments/assets/07a95435-ce05-4611-810d-f28d20fff077" />
+
 **Verify in Wazuh:** same Event IDs as the corresponding manual scenarios above — running both confirms your detections aren't tied to one specific tool's behavior.
+
+<img width="1911" height="828" alt="Screenshot 2026-08-09 133830" src="https://github.com/user-attachments/assets/18eebfdf-a1ff-478a-9db9-28c446610b60" />
+
+<img width="523" height="694" alt="Screenshot 2026-08-09 134101" src="https://github.com/user-attachments/assets/ddca66d6-3d65-48e9-a2a7-b65ee0c8b0cd" />
 
 ---
 
