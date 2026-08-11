@@ -47,6 +47,8 @@ agent.name: WIN11 AND data.win.system.eventID: 3
 ```
 Sysmon Event ID 3 = network connection. Filter results to the timeframe of your nmap scan and look for a high volume of entries all sharing the same `data.win.eventdata.sourceIp` (192.168.100.30 — your Kali box).
 
+<img width="1256" height="720" alt="Screenshot 2026-08-10 192057" src="https://github.com/user-attachments/assets/2f22824d-fc37-4269-a4c7-cd59c6832c47" />
+
 **Refine to confirm Kali as source:**
 ```
 data.win.eventdata.sourceIp: 192.168.100.30 AND data.win.system.eventID: 3
