@@ -78,6 +78,10 @@ data.win.system.eventID: 4625
 ```
 Windows Security Event ID 4625 = failed logon.
 
+<img width="1256" height="640" alt="hunt_2_password_spray" src="https://github.com/user-attachments/assets/44b875b0-37f6-4305-9237-6f95619e5cbb" />
+
+<img width="632" height="678" alt="Details_hunt_2_password_spray" src="https://github.com/user-attachments/assets/e5ec989f-66e2-4a74-b513-67379226aa9f" />
+
 **Refine to show only the spray window:**
 ```
 data.win.system.eventID: 4625 AND data.win.eventdata.ipAddress: 192.168.100.30
@@ -115,6 +119,9 @@ data.win.system.eventID: 4624 AND data.win.eventdata.logonType: 10
 ```
 Windows Security Event ID 4624 = successful logon. Logon Type 10 = RemoteInteractive (RDP specifically).
 
+<img width="1255" height="452" alt="Hunt3_Successful_RDP_Login" src="https://github.com/user-attachments/assets/d47e359c-f266-4a72-98fd-75a7be5f47eb" />
+<img width="1265" height="558" alt="Hunt3_Successful_RDP_Login_refined" src="https://github.com/user-attachments/assets/db992f4e-4ff5-4a61-95a1-3c576815c7e6" />
+
 **Refine to confirm source:**
 ```
 data.win.system.eventID: 4624 AND data.win.eventdata.logonType: 10 AND data.win.eventdata.ipAddress: 192.168.100.30
@@ -144,6 +151,10 @@ data.win.system.eventID: 4624 AND data.win.eventdata.logonType: 10 AND data.win.
 data.win.system.eventID: 1 AND data.win.eventdata.commandLine: *-enc*
 ```
 Sysmon Event ID 1 = process creation. The `*-enc*` wildcard catches both `-enc` and `-EncodedCommand`.
+
+<img width="1266" height="580" alt="Hunt4_Encoded_Powershell_Obfuscation_technique" src="https://github.com/user-attachments/assets/91fbfd9a-92e1-4964-9279-9d2543deaa64" />
+
+<img width="957" height="863" alt="Hunt4_Encoded_Powershell_Obfuscation_technique_Details" src="https://github.com/user-attachments/assets/766c99cb-1199-4c00-af4a-a0b5e34f055f" />
 
 **Also search for the hidden window flag used in Scenario 4:**
 ```
@@ -246,6 +257,8 @@ Sysmon Event ID 11 = FileCreate. This catches the `.dmp` file being written to d
 data.win.system.eventID: 1 AND data.win.eventdata.image: *net.exe*
 ```
 
+<img width="1261" height="814" alt="Hunt7_Domain_Enumeration" src="https://github.com/user-attachments/assets/d05b6066-6d07-4d31-8b60-b172aeb1c1ed" />
+
 **Refine to catch domain-specific queries:**
 ```
 data.win.system.eventID: 1 AND data.win.eventdata.commandLine: *net user /domain*
@@ -277,6 +290,8 @@ Windows Security Event ID 4661 = a handle to an object was requested (fires when
 agent.name: DC01 AND data.win.system.eventID: 4624 AND data.win.eventdata.logonType: 3
 ```
 Logon Type 3 = network logon (covers PSRemoting, net use, WMI-based movement).
+
+<img width="1223" height="812" alt="Hunt8_LateralMovement_searching_for logging in on DC01 completely" src="https://github.com/user-attachments/assets/3ad6b492-0cd8-42eb-a590-a8dbf4ae9dd2" />
 
 **Also search for explicit credential use:**
 ```
@@ -338,7 +353,12 @@ Get-Service Sysmon64
 Select-String -Path "C:\Program Files (x86)\ossec-agent\ossec.conf" -Pattern "Sysmon"
 ```
 5. **Trigger a fresh test event** and watch for it in real time — go to Discover in Wazuh, search `agent.name: WIN11`, set time to Last 15 minutes, then open Notepad on WIN11 and refresh — a Sysmon Event ID 1 for `notepad.exe` should appear within 60 seconds. If it doesn't, the pipeline is broken somewhere between Sysmon → agent → manager.
+
+<img width="1411" height="654" alt="Screenshot 2026-08-10 201936" src="https://github.com/user-attachments/assets/c0cf467b-f3b2-4824-8361-9a79f7ec4196" />
+
 6. **Check the agent log on WIN11 for errors:**
 ```powershell
 Get-Content "C:\Program Files (x86)\ossec-agent\ossec.log" -Tail 50
 ```
+
+<img width="1510" height="817" alt="Screenshot 2026-08-10 202207" src="https://github.com/user-attachments/assets/d39c3097-d561-46c2-90bb-01f1e2ced8cf" />
