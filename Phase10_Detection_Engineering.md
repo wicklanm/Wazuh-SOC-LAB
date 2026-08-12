@@ -1,0 +1,309 @@
+# Phase 10 – Detection Engineering
+
+## Overview
+
+Detection engineering is the process of turning the raw signals you found hunting in Phase 9 into automated rules that fire alerts whenever those patterns appear again. Every rule you write here maps directly to one Phase 8 attack scenario and one Phase 9 hunt query — nothing should be invented from scratch. The workflow for each rule is:
+
+```
+Phase 9 query (what you searched for manually)
+    ↓
+Identify exact field names and values from expanded Wazuh events
+    ↓
+Write a custom Wazuh XML rule in local_rules.xml
+    ↓
+Test with wazuh-logtest
+    ↓
+Re-run the Phase 8 attack
+    ↓
+Confirm the rule fires in the dashboard
+```
+
+---
+
+## Critical Rule Before You Start
+
+<cite index="2-1,4-1">All custom rules belong in `/var/ossec/etc/rules/local_rules.xml` on the WAZUH machine — never in `/var/ossec/ruleset/rules/`. That directory is owned by Wazuh and gets overwritten on every upgrade, wiping any rules you put there. Custom rules in `local_rules.xml` survive upgrades.</cite>
+
+<cite index="4-1">Custom rule IDs must be 100000 or above</cite> — built-in Wazuh rules use lower numbers and you must never overlap with them.
+
+<cite index="4-1">Rule levels run 0 to 16. Level 0 means store but do not alert. Higher levels indicate higher severity.</cite> Use these as a guide:
+
+| Level | Use For |
+|---|---|
+| 3 | Informational / low noise |
+| 7 | Suspicious activity worth reviewing |
+| 10 | Likely malicious — should alert |
+| 12 | High confidence attack |
+| 15 | Critical — immediate response |
+
+---
+
+## Part A: Opening local_rules.xml
+
+**SSH into WAZUH** from a terminal on your host machine (or use the VirtualBox console):
+```bash
+sudo nano /var/ossec/etc/rules/local_rules.xml
+```
+
+The file already exists and contains a default comment. All your rules go inside the outer `<group>` tags. The basic structure of the whole file should look like this:
+
+```xml
+<group name="local,soc-lab,">
+
+  <!-- Your rules go here, one after another -->
+
+</group>
+```
+
+Every rule block sits between those group tags. Save after adding each rule (`Ctrl+O`, `Enter`, `Ctrl+X` in nano).
+
+---
+
+## Part B: Rule XML Structure
+
+Every rule follows this pattern:
+
+```xml
+<rule id="UNIQUE_ID" level="SEVERITY">
+  <if_sid>PARENT_RULE_ID</if_sid>
+  <field name="FIELD_NAME">VALUE_TO_MATCH</field>
+  <description>Human readable alert text</description>
+  <mitre>
+    <id>TXXXX.XXX</id>
+  </mitre>
+</rule>
+```
+
+Key elements explained:
+
+| Element | Purpose |
+|---|---|
+| `id` | Your unique rule ID — start at 100001, increment by 1 for each rule |
+| `level` | Severity 0-16 |
+| `if_sid` | Parent rule ID this fires on top of — Sysmon Event ID 1 is rule `61603`, Security events use `60103` (Windows base) |
+| `field name` | The decoded field name from the Wazuh event JSON — copy these exactly from expanded events in the dashboard |
+| `description` | The alert text analysts see — make it specific and actionable |
+| `mitre` | MITRE ATT&CK technique ID for the alert |
+
+**Finding the right `if_sid` value:** In Wazuh dashboard, expand any event you found during Phase 9 hunting → look for the `rule.id` field in the raw JSON. That number is what you put in `if_sid` — it tells Wazuh to only evaluate your rule when that parent rule already matched.
+
+---
+
+## Part C: Write the Rules
+
+Add each rule below to `local_rules.xml` one at a time, testing each before adding the next.
+
+### Rule 1 — Nmap Scan Detection
+```xml
+<rule id="100001" level="7">
+  <if_sid>60103</if_sid>
+  <field name="win.system.eventID">^5157$</field>
+  <field name="win.eventdata.sourceAddress">192.168.100.30</field>
+  <description>Possible network scan detected from Kali attacker box (192.168.100.30)</description>
+  <mitre>
+    <id>T1046</id>
+  </mitre>
+</rule>
+```
+
+### Rule 2 — Password Spray (Multiple Failed Logins)
+```xml
+<rule id="100002" level="10" frequency="5" timeframe="30">
+  <if_matched_sid>60204</if_matched_sid>
+  <same_field>win.eventdata.ipAddress</same_field>
+  <different_field>win.eventdata.targetUserName</different_field>
+  <description>Password spray detected — multiple failed logons from same IP against different accounts</description>
+  <mitre>
+    <id>T1110.003</id>
+  </mitre>
+</rule>
+```
+> Note: `frequency="5"` and `timeframe="30"` means 5 failures from the same IP hitting different usernames within 30 seconds triggers this rule. Adjust the numbers to match what you actually saw in Phase 9.
+
+### Rule 3 — Successful RDP Login from Attacker IP
+```xml
+<rule id="100003" level="10">
+  <if_sid>60106</if_sid>
+  <field name="win.system.eventID">^4624$</field>
+  <field name="win.eventdata.logonType">^10$</field>
+  <field name="win.eventdata.ipAddress">192.168.100.30</field>
+  <description>Successful RDP login from Kali attacker box (192.168.100.30) — possible unauthorized access</description>
+  <mitre>
+    <id>T1021.001</id>
+  </mitre>
+</rule>
+```
+
+### Rule 4 — Encoded PowerShell Execution
+```xml
+<rule id="100004" level="12">
+  <if_sid>61603</if_sid>
+  <field name="win.eventdata.commandLine" type="pcre2">(?i)-e(nc|ncodedcommand)\s</field>
+  <description>Encoded PowerShell command detected — possible obfuscated execution</description>
+  <mitre>
+    <id>T1059.001</id>
+  </mitre>
+</rule>
+```
+> Note: `type="pcre2"` enables regex matching. This catches both `-enc` and `-EncodedCommand` in any case combination.
+
+### Rule 5a — Scheduled Task Creation
+```xml
+<rule id="100005" level="10">
+  <if_sid>60103</if_sid>
+  <field name="win.system.eventID">^4698$</field>
+  <description>Scheduled task created — possible persistence mechanism</description>
+  <mitre>
+    <id>T1053.005</id>
+  </mitre>
+</rule>
+```
+
+### Rule 5b — Registry Run Key Persistence
+```xml
+<rule id="100006" level="10">
+  <if_sid>61603</if_sid>
+  <field name="win.system.eventID">^13$</field>
+  <field name="win.eventdata.targetObject" type="pcre2">CurrentVersion\\\\Run</field>
+  <description>Registry Run key modified — possible persistence via startup entry</description>
+  <mitre>
+    <id>T1547.001</id>
+  </mitre>
+</rule>
+```
+
+### Rule 6 — LSASS Memory Access (Credential Dumping)
+```xml
+<rule id="100007" level="15">
+  <if_sid>61603</if_sid>
+  <field name="win.system.eventID">^10$</field>
+  <field name="win.eventdata.targetImage" type="pcre2">(?i)lsass\.exe</field>
+  <description>LSASS process accessed by non-system process — likely credential dumping attempt</description>
+  <mitre>
+    <id>T1003.001</id>
+  </mitre>
+</rule>
+```
+> This is your highest-severity rule — level 15 is appropriate because legitimate processes rarely need to open a handle to LSASS with dump-level access rights.
+
+### Rule 7 — Domain Enumeration via net.exe
+```xml
+<rule id="100008" level="7">
+  <if_sid>61603</if_sid>
+  <field name="win.system.eventID">^1$</field>
+  <field name="win.eventdata.image" type="pcre2">(?i)\\net\.exe$</field>
+  <field name="win.eventdata.commandLine" type="pcre2">(?i)/domain</field>
+  <description>Domain enumeration via net.exe — attacker may be conducting reconnaissance</description>
+  <mitre>
+    <id>T1087.002</id>
+  </mitre>
+</rule>
+```
+
+### Rule 8 — Lateral Movement (Network Logon to DC01)
+```xml
+<rule id="100009" level="12">
+  <if_sid>60106</if_sid>
+  <field name="win.system.eventID">^4624$</field>
+  <field name="win.eventdata.logonType">^3$</field>
+  <field name="win.eventdata.ipAddress">192.168.100.20</field>
+  <description>Network logon to DC01 from WIN11 — possible lateral movement</description>
+  <mitre>
+    <id>T1021.002</id>
+  </mitre>
+</rule>
+```
+
+---
+
+## Part D: Test Each Rule Before Restarting
+
+<cite index="3-1">Use the `wazuh-logtest` utility to validate rules without restarting the manager.</cite> On the WAZUH machine:
+
+```bash
+sudo /var/ossec/bin/wazuh-logtest
+```
+
+This opens an interactive prompt where you paste a raw log and it shows you which decoder and rule matched. This is the fastest way to catch syntax errors before committing.
+
+**Also validate your XML syntax** before restarting — a malformed rule file will prevent the manager from loading any rules at all:
+```bash
+sudo /var/ossec/bin/wazuh-xml /var/ossec/etc/rules/local_rules.xml
+```
+If it returns nothing, the XML is clean. If it returns an error, fix the indicated line before restarting.
+
+---
+
+## Part E: Apply and Restart
+
+After adding all rules and confirming clean XML:
+```bash
+sudo systemctl restart wazuh-manager
+```
+
+Verify it came back up cleanly:
+```bash
+sudo systemctl status wazuh-manager
+```
+Should show `active (running)`. If it shows `failed`, the rules file has a syntax error — check the manager log:
+```bash
+sudo tail -50 /var/ossec/logs/ossec.log
+```
+Look for `Error` lines pointing to your rule file and fix accordingly.
+
+---
+
+## Part F: Validate Each Rule Fires
+
+For each rule, go back to the corresponding Phase 8 attack and re-run it, then check the dashboard:
+
+1. In Wazuh dashboard → **Threat Hunting**
+2. Filter by your custom rule IDs:
+```
+rule.id: 100001 OR rule.id: 100002 OR rule.id: 100003
+```
+Or filter by description text:
+```
+rule.description: *SOC-LAB* OR rule.description: *attacker*
+```
+3. Confirm the alert fired with the correct severity level and MITRE ID
+4. Screenshot the alert for your Phase 12 GitHub portfolio
+
+---
+
+## Part G: View Rules via Wazuh Dashboard (Alternative to CLI)
+
+You can also manage rules through the web UI without SSH:
+
+1. Left sidebar → **Management** → **Rules**
+2. Search for your rule IDs (100001-100009) to confirm they loaded
+3. Click any rule to see its full definition
+4. Use **Management** → **Log test** for the GUI version of `wazuh-logtest`
+
+---
+
+## Rule Summary Reference
+
+| Rule ID | Attack Scenario | Level | MITRE |
+|---|---|---|---|
+| 100001 | Nmap scan | 7 | T1046 |
+| 100002 | Password spray | 10 | T1110.003 |
+| 100003 | RDP login from Kali | 10 | T1021.001 |
+| 100004 | Encoded PowerShell | 12 | T1059.001 |
+| 100005 | Scheduled task created | 10 | T1053.005 |
+| 100006 | Registry run key write | 10 | T1547.001 |
+| 100007 | LSASS access | 15 | T1003.001 |
+| 100008 | Domain enumeration | 7 | T1087.002 |
+| 100009 | Lateral movement to DC01 | 12 | T1021.002 |
+
+---
+
+## Common Failure Points
+
+| Symptom | Likely Cause / Fix |
+|---|---|
+| Manager fails to start after adding rules | XML syntax error — run `wazuh-xml` check, look for unclosed tags or mismatched quotes |
+| Rule never fires even when attack is re-run | Wrong `if_sid` parent — expand a real event in the dashboard and copy the actual `rule.id` value into your `if_sid` |
+| Rule fires but wrong fields show in alert | Field name typo — field names are case-sensitive, copy them exactly from expanded event JSON |
+| LSASS rule fires constantly on normal activity | Normal LSASS access by system processes — add a `<field name="win.eventdata.sourceImage">` filter to exclude known-good callers like `MsMpEng.exe` (Defender) |
+| Password spray rule never fires | `frequency` threshold too high for your test — lower it to `3` and `timeframe` to `60` for lab testing |
