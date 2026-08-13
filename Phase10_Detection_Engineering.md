@@ -277,7 +277,13 @@ You can also manage rules through the web UI without SSH:
 
 1. Left sidebar → **Management** → **Rules**
 2. Search for your rule IDs (100001-100009) to confirm they loaded
+
+<img width="1225" height="665" alt="Screenshot 2026-08-12 190536" src="https://github.com/user-attachments/assets/f164b37f-d5e2-402b-8fef-20d49e315e6f" />
+
 3. Click any rule to see its full definition
+
+<img width="862" height="553" alt="Screenshot 2026-08-12 190811" src="https://github.com/user-attachments/assets/2f838ad2-a962-4cdd-9f83-cfcb1caff884" />
+
 4. Use **Management** → **Log test** for the GUI version of `wazuh-logtest`
 
 ---
