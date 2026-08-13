@@ -1015,6 +1015,8 @@ data.win.system.eventID: 1 AND data.win.eventdata.commandLine: *-WindowStyle Hid
 data.win.system.eventID: 1 AND data.win.eventdata.image: *schtasks*
 ```
 
+<img width="1190" height="507" alt="Screenshot 2026-08-12 184717" src="https://github.com/user-attachments/assets/f48861e8-b734-4460-959c-0d1158f0d56c" />
+
 **Search for the audit event:**
 ```
 data.win.system.eventID: 4698
