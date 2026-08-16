@@ -311,7 +311,7 @@ Choose **Graphical install** at the boot menu (not "Live" or text-mode "Install"
 - **Domain name:** leave blank
 - **User account:** modern Kali installers create a non-root sudo user during setup — set a username/password you'll remember; you'll use this to log in and `sudo` for everything going forward
 - **Partitioning:** Guided → use entire disk → select the virtual disk → "All files in one partition" → confirm and write changes
-- **Software selection:** choose **Xfce** for the desktop environment, and make sure the **default tools collection** stays checked (not just a bare desktop) — this determines whether nmap/hydra/Responder etc. are present immediately after install
+- **Software selection:** choose **Xfce** for the desktop environment, and make sure the **default tools collection** stays checked (not just a bare desktop)
 - **GRUB bootloader:** install to `/dev/sda`
 
 <img width="792" height="681" alt="Screenshot 2026-08-05 185629" src="https://github.com/user-attachments/assets/15ee5504-1491-4b05-9851-3257333d8560" />
@@ -563,16 +563,11 @@ nmap -sC -sV -p- 192.168.100.20   # WIN11
 
 ### 2. Password Spraying
 
-**Using Hydra** against WinRM on WIN11, with a small user list and common password list:
-```bash
-hydra -L users.txt -P passwords.txt winrm://192.168.100.20
-```
-Create `users.txt` with one username per line (e.g. `John.Smith`, `Jane.Doe`, `Helpdesk`) and `passwords.txt` with a handful of common/guessable values. Keep the list small and the attempt rate low — this is meant to simulate a realistic spray, not a brute force, and gives you a cleaner signal to hunt for afterward (a handful of 4625 events, not thousands).
-
-**Alternative using NetExec** (the actively maintained CrackMapExec successor — often cleaner output for this):
+**Using NetExec** against WinRM on WIN11, with a small user list and common password list:
 ```bash
 nxc smb 192.168.100.20 -u users.txt -p passwords.txt
 ```
+Create `users.txt` with one username per line (e.g. `John.Smith`, `Jane.Doe`, `Helpdesk`) and `passwords.txt` with a handful of common/guessable values. Keep the list small and the attempt rate low — this is meant to simulate a realistic spray, not a brute force, and gives you a cleaner signal to hunt for afterward (a handful of 4625 events, not thousands).
 
 **Verify in Wazuh:** filter for Windows Security Event ID 4625 (failed logon) on WIN11 — you should see one entry per spray attempt, spread across multiple usernames in a short window. That username-breadth pattern is the actual spray signature you'll hunt for in Phase 9.
 
