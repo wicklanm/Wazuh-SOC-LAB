@@ -230,6 +230,8 @@ All activity in this lab was performed in an isolated VirtualBox environment on 
 
 ## Phase 1 – Build the Enterprise Network
 
+[Exact steps taken Phase 1](https://github.com/wicklanm/Wazuh-SOC-LAB/blob/main/Phase%201%20%E2%80%93%20Build%20the%20Enterprise%20Network)
+
 1. **Install VirtualBox + Extension Pack** on your host. Reboot after install (driver install requires it).
 2. **Download ISOs first:**
    - Windows Server 2025 Evaluation (180-day) — Microsoft Evaluation Center.
