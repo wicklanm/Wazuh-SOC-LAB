@@ -1,17 +1,41 @@
 # Wazuh-SOC-LAB
 I built an enterprise SOC lab demonstrating attack simulation, threat hunting, detection engineering, and incident response across an Active Directory environment — built on VirtualBox with Wazuh SIEM.
 
-**Lab Overview**
+**##Lab Overview**
 This lab simulates a small enterprise network containing a Windows Server 2025 Domain Controller, a Windows 11 Enterprise workstation, a Kali Linux attacker machine, and a Wazuh SIEM stack — all isolated on a private internal network. The lab was built from scratch, including Active Directory configuration, domain user provisioning, Sysmon deployment, Wazuh agent enrollment, and custom detection rule authoring.
 
 The full kill chain was executed from the attacker machine through to domain controller compromise, with every technique mapped to MITRE ATT&CK, detected in Wazuh, and documented in formal incident response reports.
 
+**##Lab Goal**
+
+To build a fully functional enterprise SOC lab that demonstrates the complete security operations workflow:
+
+1. **Build** — Deploy and configure an Active Directory environment with realistic user accounts, domain-joined workstations, Sysmon endpoint telemetry, and Wazuh SIEM
+2. **Attack** — Execute a realistic attack kill chain from initial reconnaissance through to domain controller compromise using industry-standard attacker tooling
+3. **Detect** — Hunt for attack artifacts in raw Wazuh telemetry and author custom detection rules mapped to MITRE ATT&CK techniques
+4. **Respond** — Produce industry-standard incident response reports for each attack scenario including timeline, IOCs, containment steps, and hardening recommendations
+
+**##Phases Completed**
+
+| Phase | Description |
+|---|---|
+| 1 | Enterprise network design and VM provisioning |
+| 2 | Windows Server 2025 — Active Directory, DNS, domain users |
+| 3 | Windows 11 Enterprise — domain join, workstation setup |
+| 4 | Wazuh SIEM — manager, indexer, dashboard install |
+| 5 | Sysmon — SwiftOnSecurity config on DC01 and WIN11 |
+| 6 | Wazuh agents — enrollment and Sysmon log forwarding |
+| 7 | Kali Linux — attacker tooling setup |
+| 8 | Attack scenarios — full kill chain execution |
+| 9 | Threat hunting — manual detection in Wazuh |
+| 10 | Detection engineering — custom Wazuh XML rules |
+| 11 | Incident response — formal IR reports for all scenarios |
 
 # Enterprise SOC Detection Lab — Detailed Build Guide
 
 **Goal:** Build an enterprise SOC lab demonstrating attack, detection, investigation, and incident response, portfolio-ready.
 
-**Before you start — host requirements:**
+**Before starting — host requirements:**
 - Host machine: 32GB RAM minimum (16GB is workable but tight — you'll be running 4 VMs), 200GB+ free disk (SSD strongly preferred), CPU with virtualization extensions (VT-x/AMD-V) enabled in BIOS.
 - Software: VirtualBox 7.x + VirtualBox Extension Pack (needed for USB/RDP features), 7-Zip for extracting ISOs if needed.
 - Download all ISOs *before* starting Phase 1 — this saves you hours of waiting mid-build.
