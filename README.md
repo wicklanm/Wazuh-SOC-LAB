@@ -6,7 +6,7 @@ This lab simulates a small enterprise network containing a Windows Server 2025 D
 
 The full kill chain was executed from the attacker machine through to domain controller compromise, with every technique mapped to MITRE ATT&CK, detected in Wazuh, and documented in formal incident response reports.
 
-_Exact steps taken directly follow the full summary on this same page. This is due to the the documentation process of taking screenshots and writing down what was done during the creation of my work. It starts with Phase 1, directly after the Disclaimer Section._
+**Exact steps taken directly follow the full summary on this same page. This is due to the the documentation process of taking screenshots and writing down what was done during the creation of my work. It starts with Phase 1, directly after the Disclaimer Section.**
 
 ### Lab Goal
 
