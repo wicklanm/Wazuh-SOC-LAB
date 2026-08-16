@@ -1517,7 +1517,7 @@ You can also manage rules through the web UI without SSH:
 ## Phase 11 – Incident Response Documentation
 
 After running these detections, rules and reports on the Wazuh Dashboard, I wrote a detailed Incident repose summary for this scenario. The full report can be found here: 
-[Incedence Response_Report](https://github.com/wicklanm/Wazuh-SOC-LAB/blob/main/Incedence%20Response_Report.md)
+[Incidence Response Report](https://github.com/wicklanm/Wazuh-SOC-LAB/blob/main/Incedence%20Response_Report.md)
 
 ---
 
