@@ -45,7 +45,6 @@
 
 **Report ID:** IR-001  
 **Date:** Aug 12, 2026  
-**Analyst:** \[Your Name\]  
 **Severity:** Low  
 **Status:** Detection Gap — Documented
 
@@ -135,8 +134,7 @@ The attacker ran an nmap service version and OS detection scan (`-sV -O`) agains
 # IR-002 — Password Spraying
 
 **Report ID:** IR-002  
-**Date:** Aug 8, 2026  
-**Analyst:** \[Your Name\]  
+**Date:** Aug 8, 2026
 **Severity:** High  
 **Status:** Resolved
 
@@ -233,8 +231,7 @@ The attacker used NetExec (nxc) from Kali (192.168.100.30) to attempt SMB authen
 # IR-003 — Unauthorized RDP Access (Initial Foothold)
 
 **Report ID:** IR-003  
-**Date:** Aug 12, 2026  
-**Analyst:** \[Your Name\]  
+**Date:** Aug 12, 2026
 **Severity:** High  
 **Status:** Resolved
 
@@ -332,8 +329,7 @@ Using `xfreerdp` from the Kali machine, the attacker connected to WIN11 over TCP
 # IR-004 — Encoded PowerShell Execution
 
 **Report ID:** IR-004  
-**Date:** Aug 12, 2026  
-**Analyst:** \[Your Name\]  
+**Date:** Aug 12, 2026 
 **Severity:** High  
 **Status:** Resolved
 
@@ -429,8 +425,7 @@ From an elevated PowerShell session on WIN11 via the RDP connection, the attacke
 # IR-005 — Persistence via Scheduled Task & Registry Run Key
 
 **Report ID:** IR-005  
-**Date:** Aug 12, 2026  
-**Analyst:** \[Your Name\]  
+**Date:** Aug 12, 2026
 **Severity:** High  
 **Status:** Partially Detected — Registry Persistence Gap Documented
 
@@ -537,8 +532,7 @@ From the WIN11 RDP session, the attacker created multiple scheduled tasks using 
 # IR-006 — Credential Dumping (LSASS Memory Access)
 
 **Report ID:** IR-006  
-**Date:** Aug 12, 2026  
-**Analyst:** \[Your Name\]  
+**Date:** Aug 12, 2026
 **Severity:** Critical  
 **Status:** Attack Not Completed — Detection Gap Documented
 
@@ -634,8 +628,7 @@ rundll32.exe C:\\Windows\\System32\\comsvcs.dll MiniDump \<lsass\_pid\> C:\\Wind
 # IR-007 — Domain Enumeration / Active Directory Reconnaissance
 
 **Report ID:** IR-007  
-**Date:** Aug 12, 2026  
-**Analyst:** \[Your Name\]  
+**Date:** Aug 12, 2026
 **Severity:** Medium  
 **Status:** Resolved
 
@@ -736,8 +729,7 @@ From the WIN11 RDP session, the attacker used `net.exe` commands via both PowerS
 # IR-008 — Lateral Movement to Domain Controller (DC01)
 
 **Report ID:** IR-008  
-**Date:** Aug 12, 2026  
-**Analyst:** \[Your Name\]  
+**Date:** Aug 12, 2026
 **Severity:** Critical  
 **Status:** Resolved
 
