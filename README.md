@@ -1,12 +1,12 @@
 # Wazuh-SOC-LAB
 I built an enterprise SOC lab demonstrating attack simulation, threat hunting, detection engineering, and incident response across an Active Directory environment — built on VirtualBox with Wazuh SIEM.
 
-**##Lab Overview**
+## Lab Overview
 This lab simulates a small enterprise network containing a Windows Server 2025 Domain Controller, a Windows 11 Enterprise workstation, a Kali Linux attacker machine, and a Wazuh SIEM stack — all isolated on a private internal network. The lab was built from scratch, including Active Directory configuration, domain user provisioning, Sysmon deployment, Wazuh agent enrollment, and custom detection rule authoring.
 
 The full kill chain was executed from the attacker machine through to domain controller compromise, with every technique mapped to MITRE ATT&CK, detected in Wazuh, and documented in formal incident response reports.
 
-**##Lab Goal**
+### Lab Goal
 
 To build a fully functional enterprise SOC lab that demonstrates the complete security operations workflow:
 
@@ -15,7 +15,7 @@ To build a fully functional enterprise SOC lab that demonstrates the complete se
 3. **Detect** — Hunt for attack artifacts in raw Wazuh telemetry and author custom detection rules mapped to MITRE ATT&CK techniques
 4. **Respond** — Produce industry-standard incident response reports for each attack scenario including timeline, IOCs, containment steps, and hardening recommendations
 
-**##Phases Completed**
+### Phases Completed
 
 | Phase | Description |
 |---|---|
@@ -31,15 +31,12 @@ To build a fully functional enterprise SOC lab that demonstrates the complete se
 | 10 | Detection engineering — custom Wazuh XML rules |
 | 11 | Incident response — formal IR reports for all scenarios |
 
-# Enterprise SOC Detection Lab — Detailed Build Guide
-
-**Goal:** Build an enterprise SOC lab demonstrating attack, detection, investigation, and incident response, portfolio-ready.
+### Enterprise SOC Detection Lab — Detailed Build Guide
 
 **Before starting — host requirements:**
 - Host machine: 32GB RAM minimum (16GB is workable but tight — you'll be running 4 VMs), 200GB+ free disk (SSD strongly preferred), CPU with virtualization extensions (VT-x/AMD-V) enabled in BIOS.
 - Software: VirtualBox 7.x + VirtualBox Extension Pack (needed for USB/RDP features), 7-Zip for extracting ISOs if needed.
-- Download all ISOs *before* starting Phase 1 — this saves you hours of waiting mid-build.
-
+- Download all ISOs *before* starting Phase 1 — this helps save time
 | VM | Purpose | RAM | vCPU | Disk |
 |---|---|---|---|---|
 | DC01 | Windows Server 2025 (AD DC) | 4GB | 2 | 60GB |
@@ -510,7 +507,23 @@ These run directly on DC01/WIN11, not on Kali — nothing to install here for th
 
 ## Phase 8 – Attack Scenarios
 
-Executed from KALI (192.168.100.30) against DC01 (192.168.100.10) and WIN11 (192.168.100.20), all within the isolated `SOC-LAB` internal network. Each scenario below should be run, then confirmed in the Wazuh dashboard, before moving to the next — this keeps Phase 9/10 grounded in signals you've already seen land.
+Executed from KALI (192.168.100.30) against DC01 (192.168.100.10) and WIN11 (192.168.100.20), all within the isolated `SOC-LAB` internal network. Each scenario below should be run, then confirmed in the Wazuh dashboard, before moving to the next.
+
+### Attack Kill Chain Steps
+
+The following attack scenarios were executed from the Kali Linux attacker box against the SOCLAB.LOCAL environment:
+
+| # | Scenario | Tool | MITRE Technique | Detected |
+|---|---|---|---|---|
+| 1 | Network reconnaissance | nmap | T1046 | ⚠️ Gap documented |
+| 2 | Password spraying | NetExec (nxc) | T1110.003 | ✅ |
+| 3 | Unauthorized RDP access | xfreerdp | T1021.001 | ✅ |
+| 4 | Encoded PowerShell execution | PowerShell -enc | T1059.001, T1027 | ✅ |
+| 5 | Scheduled task persistence | schtasks.exe | T1053.005 | ✅ |
+| 5b | Registry Run key persistence | Set-ItemProperty | T1547.001 | ⚠️ Gap documented |
+| 6 | LSASS credential dumping | comsvcs.dll / Mimikatz | T1003.001 | ⚠️ Gap documented |
+| 7 | Domain enumeration | net.exe / PowerShell | T1087.002, T1018 | ✅ |
+| 8 | Lateral movement to DC01 | Enter-PSSession | T1021.006 | ✅ |
 
 > **Before starting:** take a fresh VirtualBox snapshot of all four VMs now if you haven't already (`Phase 8 - pre-attack baseline`). Several of these scenarios are disruptive or trip AV — a snapshot means you can roll back instantly instead of rebuilding.
 
@@ -1225,6 +1238,22 @@ Get-Content "C:\Program Files (x86)\ossec-agent\ossec.log" -Tail 50
 ---
 
 ## Phase 10 – Detection Engineering
+
+### Custom Detection Rules List
+
+Nine custom Wazuh detection rules were authored and validated against live attack telemetry:
+
+| Rule ID | Description | Severity | MITRE |
+|---|---|---|---|
+| 100001 | Network scan from attacker IP | 7 | T1046 |
+| 100002 | Password spray — same IP, multiple accounts | 10 | T1110.003 |
+| 100003 | Successful RDP login from attacker IP | 10 | T1021.001 |
+| 100004 | Encoded PowerShell (-enc / -EncodedCommand) | 12 | T1059.001 |
+| 100005 | Scheduled task created | 10 | T1053.005 |
+| 100006 | Registry Run key modified | 10 | T1547.001 |
+| 100007 | LSASS process accessed | 15 | T1003.001 |
+| 100008 | Domain enumeration via net.exe | 7 | T1087.002 |
+| 100009 | Network logon to DC01 from WIN11 | 12 | T1021.002 |
 
 ### Overview
 
