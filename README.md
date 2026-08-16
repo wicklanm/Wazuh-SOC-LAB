@@ -1,6 +1,10 @@
 # Wazuh-SOC-LAB
-I built an enterprise SOC lab demonstrating attack, detection, investigation, and incident response, portfolio-ready.
+I built an enterprise SOC lab demonstrating attack simulation, threat hunting, detection engineering, and incident response across an Active Directory environment — built on VirtualBox with Wazuh SIEM.
 
+**Lab Overview**
+This lab simulates a small enterprise network containing a Windows Server 2025 Domain Controller, a Windows 11 Enterprise workstation, a Kali Linux attacker machine, and a Wazuh SIEM stack — all isolated on a private internal network. The lab was built from scratch, including Active Directory configuration, domain user provisioning, Sysmon deployment, Wazuh agent enrollment, and custom detection rule authoring.
+
+The full kill chain was executed from the attacker machine through to domain controller compromise, with every technique mapped to MITRE ATT&CK, detected in Wazuh, and documented in formal incident response reports.
 
 
 # Enterprise SOC Detection Lab — Detailed Build Guide
