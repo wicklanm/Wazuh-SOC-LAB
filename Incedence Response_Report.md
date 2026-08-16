@@ -2,7 +2,7 @@
 
 **Environment:** SOCLAB.LOCAL  
 **Lab Network:** 192.168.100.0/24  
-**Analyst:** \[Your Name\]  
+**Analyst:** Michael Wickland
 **Platform:** Wazuh 4.x / Windows Server 2025 / Windows 11 Enterprise
 
 ---
