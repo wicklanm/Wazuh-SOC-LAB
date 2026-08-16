@@ -1516,17 +1516,8 @@ You can also manage rules through the web UI without SSH:
 
 ## Phase 11 – Incident Response Documentation
 
-For **each** attack scenario, produce a short report containing:
-- Executive summary (2-3 sentences, non-technical)
-- Timeline (timestamped, pulled straight from Wazuh event timestamps)
-- MITRE ATT&CK technique ID and tactic (e.g., T1003.001 — Credential Access)
-- IOCs (process names, command lines, file hashes if applicable, source/destination IPs)
-- Detection (which Wazuh/Sigma rule fired, or would need to)
-- Containment/eradication steps you'd take in a real environment
-- Recovery steps
-- Lessons learned / recommended hardening
-
-Keep a consistent template across all scenarios — this consistency is what reads as "professional" to anyone reviewing your portfolio.
+After running these detections, rules and reports on the Wazuh Dashboard, I wrote a detailed Incident repose summary for this scenario. The full report can be found here: 
+[Incedence Response_Report](https://github.com/wicklanm/Wazuh-SOC-LAB/blob/main/Incedence%20Response_Report.md)
 
 ---
 
