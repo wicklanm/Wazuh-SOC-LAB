@@ -6,6 +6,8 @@ This lab simulates a small enterprise network containing a Windows Server 2025 D
 
 The full kill chain was executed from the attacker machine through to domain controller compromise, with every technique mapped to MITRE ATT&CK, detected in Wazuh, and documented in formal incident response reports.
 
+_Exact steps taken directly follow the full summary on this same page. This is due to the the documentation process of taking screenshots and writing down what was done during the creation of my work. It starts with Phase 1, directly after the Disclaimer Section._
+
 ## Lab Goal
 
 To build a fully functional enterprise SOC lab that demonstrates the complete security operations workflow:
@@ -45,7 +47,6 @@ To build a fully functional enterprise SOC lab that demonstrates the complete se
 | KALI | Kali Linux (attacker) | 4GB | 2 | 40GB |
 
 ---
-
 
 ## Attack Kill Chain
 
@@ -181,7 +182,7 @@ Rules are available in Phase 8: [`/detections/local_rules.xml`](./detections/loc
 
 ## Incident Response Reports
 
-Full incident response documentation for all eight attack scenarios is available in [`/incident-reports/`](./incident-reports/), including:
+Full incident response documentation for all eight attack scenarios is available in [Incidence Response Report](https://github.com/wicklanm/Wazuh-SOC-LAB/blob/main/Incedence%20Response_Report.md), including:
 
 - Executive summary (non-technical)
 - Timestamped timeline (pulled directly from Wazuh event data)
@@ -194,43 +195,12 @@ Full incident response documentation for all eight attack scenarios is available
 
 ---
 
-## Repository Structure
-
-```
-/
-├── README.md                          ← This file
-├── architecture/
-│   └── network-diagram.png            ← Lab network topology
-├── detections/
-│   └── local_rules.xml                ← All custom Wazuh rules (100001-100009)
-├── incident-reports/
-│   ├── IR-001-nmap-scan.md
-│   ├── IR-002-password-spray.md
-│   ├── IR-003-rdp-access.md
-│   ├── IR-004-encoded-powershell.md
-│   ├── IR-005-persistence.md
-│   ├── IR-006-lsass-dump.md
-│   ├── IR-007-domain-enumeration.md
-│   └── IR-008-lateral-movement.md
-├── screenshots/
-│   └── [Wazuh dashboard alert screenshots]
-└── docs/
-    ├── phase7-kali-setup.md
-    ├── phase8-attack-scenarios-rdp.md
-    ├── phase9-threat-hunting.md
-    └── phase10-detection-engineering.md
-```
-
----
-
 ## Disclaimer
 
 All activity in this lab was performed in an isolated VirtualBox environment on privately-owned hardware. No production systems, real user accounts, or unauthorized networks were involved. All attack techniques were executed solely for educational purposes within a controlled lab environment.
 
 
 ## Phase 1 – Build the Enterprise Network
-
-[Exact steps taken Phase 1](https://github.com/wicklanm/Wazuh-SOC-LAB/blob/main/Phase%201%20%E2%80%93%20Build%20the%20Enterprise%20Network)
 
 1. **Install VirtualBox + Extension Pack** on your host. Reboot after install (driver install requires it).
 2. **Download ISOs first:**
