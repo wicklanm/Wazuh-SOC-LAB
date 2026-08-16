@@ -1,14 +1,14 @@
 # Wazuh-SOC-LAB
 I built an enterprise SOC lab demonstrating attack simulation, threat hunting, detection engineering, and incident response across an Active Directory environment — built on VirtualBox with Wazuh SIEM.
 
-## Lab Overview
+### Lab Overview
 This lab simulates a small enterprise network containing a Windows Server 2025 Domain Controller, a Windows 11 Enterprise workstation, a Kali Linux attacker machine, and a Wazuh SIEM stack — all isolated on a private internal network. The lab was built from scratch, including Active Directory configuration, domain user provisioning, Sysmon deployment, Wazuh agent enrollment, and custom detection rule authoring.
 
 The full kill chain was executed from the attacker machine through to domain controller compromise, with every technique mapped to MITRE ATT&CK, detected in Wazuh, and documented in formal incident response reports.
 
 _Exact steps taken directly follow the full summary on this same page. This is due to the the documentation process of taking screenshots and writing down what was done during the creation of my work. It starts with Phase 1, directly after the Disclaimer Section._
 
-## Lab Goal
+### Lab Goal
 
 To build a fully functional enterprise SOC lab that demonstrates the complete security operations workflow:
 
@@ -17,7 +17,7 @@ To build a fully functional enterprise SOC lab that demonstrates the complete se
 3. **Detect** — Hunt for attack artifacts in raw Wazuh telemetry and author custom detection rules mapped to MITRE ATT&CK techniques
 4. **Respond** — Produce industry-standard incident response reports for each attack scenario including timeline, IOCs, containment steps, and hardening recommendations
 
-## Phases Completed
+### Phases Completed
 
 | Phase | Description |
 |---|---|
@@ -33,7 +33,7 @@ To build a fully functional enterprise SOC lab that demonstrates the complete se
 | 10 | Detection engineering — custom Wazuh XML rules |
 | 11 | Incident response — formal IR reports for all scenarios |
 
-## Enterprise SOC Detection Lab — Detailed Build Guide
+### Enterprise SOC Detection Lab — Detailed Build Guide
 
 **Before starting — host requirements:**
 - Host machine: 32GB RAM minimum (16GB is workable but tight — you'll be running 4 VMs), 200GB+ free disk (SSD strongly preferred), CPU with virtualization extensions (VT-x/AMD-V) enabled in BIOS.
@@ -48,7 +48,7 @@ To build a fully functional enterprise SOC lab that demonstrates the complete se
 
 ---
 
-## Attack Kill Chain
+### Attack Kill Chain
 
 The following attack scenarios were executed from the Kali Linux attacker box against the SOCLAB.LOCAL environment:
 
@@ -66,9 +66,13 @@ The following attack scenarios were executed from the Kali Linux attacker box ag
 
 ---
 
-## Custom Detection Rules
+### Custom Detection Rules
 
-Nine custom Wazuh detection rules were authored and validated against live attack telemetry:
+#### Overview
+
+Detection engineering is the process of turning the raw signals you found hunting in Phase 9 into automated rules that fire alerts whenever those patterns appear again. Every rule written maps directly to one Phase 8 attack scenario and one Phase 9 hunt query.
+
+#### Nine custom Wazuh detection rules were authored and validated against live attack telemetry:
 
 | Rule ID | Description | Severity | MITRE |
 |---|---|---|---|
@@ -82,11 +86,9 @@ Nine custom Wazuh detection rules were authored and validated against live attac
 | 100008 | Domain enumeration via net.exe | 7 | T1087.002 |
 | 100009 | Network logon to DC01 from WIN11 | 12 | T1021.002 |
 
-Rules are available in Phase 8: [`/detections/local_rules.xml`](./detections/local_rules.xml).
-
 ---
 
-## Tools Used
+### Tools Used
 
 **Infrastructure:**
 - Oracle VirtualBox 7.x
@@ -115,7 +117,7 @@ Rules are available in Phase 8: [`/detections/local_rules.xml`](./detections/loc
 
 ---
 
-## Skills Demonstrated
+### Skills Demonstrated
 
 **Security Operations:**
 - SIEM deployment, configuration, and agent management
@@ -160,7 +162,7 @@ Rules are available in Phase 8: [`/detections/local_rules.xml`](./detections/loc
 
 ---
 
-## Key Findings & Detection Highlights
+### Key Findings & Detection Highlights
 
 **Strongest Detections:**
 
@@ -180,7 +182,7 @@ Rules are available in Phase 8: [`/detections/local_rules.xml`](./detections/loc
 
 ---
 
-## Incident Response Reports
+### Incident Response Reports
 
 Full incident response documentation for all eight attack scenarios is available in [Incidence Response Report](https://github.com/wicklanm/Wazuh-SOC-LAB/blob/main/Incedence%20Response_Report.md), including:
 
@@ -195,7 +197,7 @@ Full incident response documentation for all eight attack scenarios is available
 
 ---
 
-## Disclaimer
+### Disclaimer
 
 All activity in this lab was performed in an isolated VirtualBox environment on privately-owned hardware. No production systems, real user accounts, or unauthorized networks were involved. All attack techniques were executed solely for educational purposes within a controlled lab environment.
 
