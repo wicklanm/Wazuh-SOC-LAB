@@ -1518,19 +1518,3 @@ You can also manage rules through the web UI without SSH:
 
 After running these detections, rules and reports on the Wazuh Dashboard, I wrote a detailed Incident repose summary for this scenario. The full report can be found here: 
 [Incidence Response Report](https://github.com/wicklanm/Wazuh-SOC-LAB/blob/main/Incedence%20Response_Report.md)
-
----
-
-## Phase 12 – GitHub Portfolio
-
-1. Structure the repo clearly, e.g.:
-```
-/architecture/       - network diagram, AD structure diagram
-/screenshots/         - Wazuh dashboard views, ADUC, attack execution proof
-/detections/          - Sigma rules + Wazuh XML rules
-/incident-reports/    - one markdown file per Phase 8 scenario, using the Phase 11 template
-/mitre-mapping/        - a single table mapping every technique tested to detection status
-README.md
-```
-2. **Redact before publishing:** strip real usernames/passwords used in testing (even lab ones — habit-forming for real engagements), internal IPs are fine to leave since it's a private range, but scrub any host-specific identifiers you wouldn't want public if you ever reuse this repo as a live reference.
-3. A single MITRE ATT&CK Navigator-style heatmap image showing covered techniques is a strong portfolio centerpiece — MITRE provides a free web-based Navigator tool for generating this from a technique list.
