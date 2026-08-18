@@ -1500,6 +1500,7 @@ Key elements explained:
 Add each rule below to `local_rules.xml` one at a time, testing each before adding the next.
 
 #### Rule 1 — Nmap Scan Detection
+Watches for Windows Firewall block events (Event ID 5157) originating specifically from the Kali machine's IP (192.168.100.30). When nmap hits ports that are closed or filtered, Windows generates these firewall events in rapid bursts — the rule catches that pattern by keying on the source address.
 ```xml
 <rule id="100001" level="7">
   <if_sid>60103</if_sid>
@@ -1513,6 +1514,7 @@ Add each rule below to `local_rules.xml` one at a time, testing each before addi
 ```
 
 #### Rule 2 — Password Spray (Multiple Failed Logins)
+A frequency-based correlation rule that fires when 5 or more failed logons (Event ID 4625) come from the same source IP but target different usernames within a 30-second window. That combination — same IP, breadth of accounts, short timeframe — is the defining signature of a spray versus a normal single-account failed login.
 ```xml
 <rule id="100002" level="10" frequency="5" timeframe="30">
   <if_matched_sid>60204</if_matched_sid>
@@ -1527,6 +1529,7 @@ Add each rule below to `local_rules.xml` one at a time, testing each before addi
 > Note: `frequency="5"` and `timeframe="30"` means 5 failures from the same IP hitting different usernames within 30 seconds triggers this rule. Adjust the numbers to match what you actually saw in Phase 9.
 
 #### Rule 3 — Successful RDP Login from Attacker IP
+Looks for a successful logon (Event ID 4624) where Logon Type is 10 (RemoteInteractive, which specifically means RDP) and the source IP is 192.168.100.30. A successful RDP session from the Kali box after a spray is the foothold being established.
 ```xml
 <rule id="100003" level="10">
   <if_sid>60106</if_sid>
@@ -1541,6 +1544,7 @@ Add each rule below to `local_rules.xml` one at a time, testing each before addi
 ```
 
 #### Rule 4 — Encoded PowerShell Execution
+Uses PCRE2 regex to scan Sysmon Event ID 1 (process creation) command lines for the '-enc' or '-EncodedCommand' flag in any capitalization. This is the obfuscation signal — legitimate software almost never uses encoded commands, so catching that flag in a command line is high confidence that someone is trying to hide what they're running.
 ```xml
 <rule id="100004" level="12">
   <if_sid>61603</if_sid>
@@ -1554,6 +1558,7 @@ Add each rule below to `local_rules.xml` one at a time, testing each before addi
 > Note: `type="pcre2"` enables regex matching. This catches both `-enc` and `-EncodedCommand` in any case combination.
 
 #### Rule 5a — Scheduled Task Creation
+Fires on Windows Security Event ID 4698, which Windows generates any time a scheduled task is created. Scheduled tasks are one of the most common persistence mechanisms because they survive reboots and run under whatever account you specify — so any new task creation is worth an alert.
 ```xml
 <rule id="100005" level="10">
   <if_sid>60103</if_sid>
@@ -1566,6 +1571,7 @@ Add each rule below to `local_rules.xml` one at a time, testing each before addi
 ```
 
 #### Rule 5b — Registry Run Key Persistence
+Watches Sysmon Event ID 13 (registry value set) for any write to a path containing CurrentVersion\Run. The Run keys under HKCU and HKLM are classic persistence locations — anything written there executes automatically at logon, making them a primary target for attackers establishing a foothold that outlasts a session.
 ```xml
 <rule id="100006" level="10">
   <if_sid>61603</if_sid>
@@ -1579,6 +1585,7 @@ Add each rule below to `local_rules.xml` one at a time, testing each before addi
 ```
 
 #### Rule 6 — LSASS Memory Access (Credential Dumping)
+The highest severity rule in the set at Level 15. It triggers on Sysmon Event ID 10 (ProcessAccess) whenever any process opens a handle to lsass.exe. Legitimate software almost never needs to access LSASS directly — when something does, it's almost always credential dumping. The rule is intentionally broad because the target process alone is enough to warrant an immediate alert.
 ```xml
 <rule id="100007" level="15">
   <if_sid>61603</if_sid>
@@ -1593,6 +1600,7 @@ Add each rule below to `local_rules.xml` one at a time, testing each before addi
 > This is your highest-severity rule — level 15 is appropriate because legitimate processes rarely need to open a handle to LSASS with dump-level access rights.
 
 #### Rule 7 — Domain Enumeration via net.exe
+Catches Sysmon Event ID 1 where the image is 'net.exe' and the command line contains '/domain'. This combination specifically flags domain reconnaissance — running 'net user /domain' or 'net group /domain' from a workstation is something a normal user rarely does, but is one of the first things an attacker does after establishing a foothold to understand what they have access to.
 ```xml
 <rule id="100008" level="7">
   <if_sid>61603</if_sid>
@@ -1607,6 +1615,7 @@ Add each rule below to `local_rules.xml` one at a time, testing each before addi
 ```
 
 #### Rule 8 — Lateral Movement (Network Logon to DC01)
+Looks for a successful network logon (Event ID 4624, Logon Type 3) on the DC01 agent originating from WIN11's IP (192.168.100.20). A workstation initiating a network authentication session directly to the domain controller is a lateral movement red flag — in a properly segmented environment, workstations shouldn't be initiating direct connections to DCs.
 ```xml
 <rule id="100009" level="12">
   <if_sid>60106</if_sid>
